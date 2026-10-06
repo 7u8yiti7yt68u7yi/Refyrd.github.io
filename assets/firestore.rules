@@ -13,7 +13,23 @@ service cloud.firestore {
         && request.resource.data.score is int
         && request.resource.data.score >= 0
         && request.resource.data.score <= 100000;
-      allow delete: if false;
+      allow delete: if request.auth != null
+        && request.auth.uid == userId;
+    }
+
+    // Leaderboard (Danmaku Hell)
+    match /danmaku_leaderboard/{userId} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['name', 'score'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 30
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 10000000;
+      allow delete: if request.auth != null
+        && request.auth.uid == userId;
     }
 
     // Users profile & nickname cooldown
@@ -50,8 +66,7 @@ service cloud.firestore {
       match /votes/{voteKey} {
         allow read: if true;
         allow write: if request.auth != null
-          && request.auth.uid == voteKey
-          && request.resource.data.keys().hasOnly(['type', 'userId', 'feedbackId', 'timestamp']);
+          && request.auth.uid == voteKey;
       }
 
       // Comments subcollection
@@ -81,6 +96,58 @@ service cloud.firestore {
 
     // Feedback entries (Hub)
     match /feedback_hub/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['message', 'name', 'time', 'likes', 'dislikes', 'commentCount', 'uid'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 3
+        && request.resource.data.message.size() <= 1000
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 50;
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likes', 'dislikes', 'commentCount']);
+      allow delete: if request.auth != null
+        && (
+          !resource.data.keys().hasAny(['uid'])
+          || resource.data.uid == request.auth.uid
+        );
+
+      // Votes subcollection
+      match /votes/{voteKey} {
+        allow read: if true;
+        allow write: if request.auth != null
+          && request.auth.uid == voteKey;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.keys().hasOnly(['name', 'message', 'uid', 'time'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.message is string
+          && request.resource.data.message.size() >= 1
+          && request.resource.data.message.size() <= 500
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 50;
+        allow update: if request.auth != null
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['message'])
+          && request.resource.data.message is string
+          && request.resource.data.message.size() >= 1
+          && request.resource.data.message.size() <= 500;
+        allow delete: if request.auth != null
+          && (
+            !resource.data.keys().hasAny(['uid'])
+            || resource.data.uid == request.auth.uid
+          );
+      }
+    }
+
+    // Feedback entries (Danmaku Hell)
+    match /danmaku_feedback/{id} {
       allow read: if true;
       allow create: if request.auth != null
         && request.resource.data.keys().hasOnly(['message', 'name', 'time', 'likes', 'dislikes', 'commentCount', 'uid'])
