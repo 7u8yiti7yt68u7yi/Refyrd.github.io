@@ -307,10 +307,6 @@ const authGithub = document.getElementById('authGithub');
 const authStatus = document.getElementById('authStatus');
 
 const accEmail = document.getElementById('accEmail');
-const accNickInput = document.getElementById('accNickInput');
-const accNickSave = document.getElementById('accNickSave');
-const accNickStatus = document.getElementById('accNickStatus');
-const authSignOutBtn = document.getElementById('authSignOutBtn');
 
 function showStatus(el, msg, isError) {
 	if (!el) return;
