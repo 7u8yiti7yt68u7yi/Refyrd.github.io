@@ -150,7 +150,8 @@ const i18n = {
         colorPurple: "Purple",
         nickPromptTitle: "Your Nickname",
         nickPromptSubtitle: "Choose a nickname for scores and profile",
-        skipBtn: "Skip"
+        skipBtn: "Skip",
+        danmakuPlayerSpeed: "Player speed"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -301,6 +302,7 @@ const i18n = {
         colorPurple: "Фиолетовая",
         nickPromptTitle: "Твой никнейм",
         nickPromptSubtitle: "Придумай никнейм для рекордов и профиля",
-        skipBtn: "Пропустить"
+        skipBtn: "Пропустить",
+        danmakuPlayerSpeed: "Скорость игрока"
     }
 };

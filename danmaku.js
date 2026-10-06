@@ -155,13 +155,16 @@ let highScore = parseInt(localStorage.getItem('danmakuHighScore') || '0', 10);
 let lastScore = 0;
 
 // Entities
+let savedSpeed = parseFloat(localStorage.getItem('danmakuPlayerSpeed') || '3.6');
+if (isNaN(savedSpeed) || savedSpeed < 2.0 || savedSpeed > 5.5) savedSpeed = 3.6;
+
 const player = {
     x: GAME_WIDTH / 2,
     y: GAME_HEIGHT - 70,
     w: 26,
     h: 30,
-    speedNormal: 3.6,
-    speedFocus: 1.7,
+    speedNormal: savedSpeed,
+    speedFocus: Math.round(savedSpeed * (1.7 / 3.6) * 10) / 10,
     focused: false,
     invincibleTimer: 0,
     shootCooldown: 0,
@@ -1491,6 +1494,11 @@ function applyLanguage() {
     if (controlsTip) controlsTip.innerHTML = currentLang === 'ru' 
         ? 'WASD/Стрелки — движение<br><b>Shift</b> — Точный фокус (хитбокс 3px)<br><b>Z / Пробел</b> — стрельба | <b>X</b> — Бомба'
         : 'WASD/Arrows — move<br><b>Shift</b> — Precision focus (3px hitbox)<br><b>Z / Space</b> — shoot | <b>X</b> — Bomb';
+
+    const speedLabelStart = document.getElementById('uiSpeedLabel');
+    if (speedLabelStart) speedLabelStart.textContent = t.danmakuPlayerSpeed || 'Скорость игрока';
+    const speedLabelPause = document.getElementById('uiPauseSpeedLabel');
+    if (speedLabelPause) speedLabelPause.textContent = t.danmakuPlayerSpeed || 'Скорость игрока';
 
     const touchFocus = document.getElementById('touchFocusBtn');
     if (touchFocus) touchFocus.innerText = t.danmakuFocusBtn || 'Фокус (Shift)';
@@ -2841,8 +2849,38 @@ function initCookieBanner() {
     });
 }
 
+// === PLAYER SPEED SLIDERS (PC ONLY) ===
+function setPlayerSpeed(val) {
+    let num = parseFloat(val);
+    if (isNaN(num)) num = 3.6;
+    num = Math.max(2.0, Math.min(5.5, Math.round(num * 10) / 10));
+    player.speedNormal = num;
+    player.speedFocus = Math.round(num * (1.7 / 3.6) * 10) / 10;
+    try {
+        localStorage.setItem('danmakuPlayerSpeed', num.toString());
+    } catch (_) {}
+    const valText = num.toFixed(1);
+    const bStart = document.getElementById('speedValBadgeStart');
+    if (bStart) bStart.textContent = valText;
+    const bPause = document.getElementById('speedValBadgePause');
+    if (bPause) bPause.textContent = valText;
+    const sStart = document.getElementById('speedSliderStart');
+    if (sStart && Math.abs(parseFloat(sStart.value) - num) > 0.01) sStart.value = valText;
+    const sPause = document.getElementById('speedSliderPause');
+    if (sPause && Math.abs(parseFloat(sPause.value) - num) > 0.01) sPause.value = valText;
+}
+
+function initSpeedSliders() {
+    const sStart = document.getElementById('speedSliderStart');
+    const sPause = document.getElementById('speedSliderPause');
+    if (sStart) sStart.addEventListener('input', (e) => setPlayerSpeed(e.target.value));
+    if (sPause) sPause.addEventListener('input', (e) => setPlayerSpeed(e.target.value));
+    setPlayerSpeed(player.speedNormal);
+}
+
 // Initialize on load
 applyTheme();
 applyColor(activeColor);
 applyLanguage();
 initCookieBanner();
+initSpeedSliders();
