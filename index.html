@@ -12,7 +12,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Google+Sans+Flex:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('p')) {
+                var p = decodeURIComponent(params.get('p'));
+                window.history.replaceState(null, '', p);
+            }
+        })();
+    </script>
 </head>
 <body data-color="green">
 
@@ -30,6 +39,7 @@
         </div>
         <a href="https://github.com/Refyrd/Refyrd.github.io" target="_blank" class="header-github">GitHub</a>
         <div class="header-actions">
+            <button class="icon-btn" id="hubBtn" title="Games">🎮</button>
             <button class="icon-btn" id="authBtn" title="Sign in">👤</button>
             <button class="icon-btn" id="langToggle">EN</button>
             <button class="icon-btn" id="themeToggle">☀️</button>
@@ -39,7 +49,38 @@
     <div class="game-container" id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         
-        <div class="overlay active" id="startMenu">
+        <div class="overlay active" id="hubMenu">
+            <div class="menu-inner hub-inner">
+                <div class="menu-title" id="uiHubTitle">ИГРЫ</div>
+                <div class="high-score" id="uiHubSubtitle">Выбери игру</div>
+                
+                <div class="hub-list">
+                    <div class="hub-card" id="hubCardSnake" role="button" tabindex="0">
+                        <div class="hub-card-icon">🐍</div>
+                        <div class="hub-card-content">
+                            <div class="hub-card-header">
+                                <span class="hub-card-title" id="uiGameSnakeTitle">Змейка</span>
+                                <span class="hub-badge" id="uiBadgeClassic">Классика</span>
+                            </div>
+                            <div class="hub-card-desc" id="uiGameSnakeDesc">Классическая аркадная змейка</div>
+                        </div>
+                    </div>
+
+                    <div class="hub-card hub-card-disabled" id="hubCardBreakout">
+                        <div class="hub-card-icon">🧱</div>
+                        <div class="hub-card-content">
+                            <div class="hub-card-header">
+                                <span class="hub-card-title" id="uiGameSoonTitle">Арканоид</span>
+                                <span class="hub-badge hub-badge-soon" id="uiBadgeSoon">В разработке</span>
+                            </div>
+                            <div class="hub-card-desc" id="uiGameSoonDesc">Скоро появится</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overlay" id="startMenu">
             <div class="menu-inner">
                 <div class="menu-title" id="uiMainTitle">ЗМЕЙКА</div>
                 <div class="high-score" id="menuHighScoreText">Лучший счет: 0</div>
@@ -61,6 +102,7 @@
                 </div>
                 <div class="button-group">
                     <button class="btn-primary" id="uiPlayBtn">Играть</button>
+                    <button class="btn-secondary" id="uiSnakeToHubBtn">Все игры</button>
                 </div>
             </div>
         </div>
@@ -73,6 +115,7 @@
                 <div class="button-group">
                     <button class="btn-primary" id="uiRestartBtn">Начать заново</button>
                     <button class="btn-secondary" id="uiMenuBtn">В меню</button>
+                    <button class="btn-secondary" id="uiGameOverToHubBtn">Все игры</button>
                 </div>
             </div>
         </div>

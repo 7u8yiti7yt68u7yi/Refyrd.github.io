@@ -90,10 +90,20 @@ const i18n = {
         accountExistsFallback: "An account with this email already exists. Try a different sign-in method.",
         signInTooltip: "Sign in",
         nicknamePlaceholder: "Nickname",
-        pageTitle: "RefyrdSnake",
+        pageTitle: "Refyrd Games",
         fbReplyOne: "reply",
         fbReplyFew: "replies",
-        githubLink: "GitHub"
+        githubLink: "GitHub",
+        hubTitle: "GAMES",
+        hubSubtitle: "Select a game",
+        gameSnakeTitle: "Snake",
+        gameSnakeDesc: "Classic arcade snake",
+        gameSoonTitle: "Breakout",
+        gameSoonDesc: "Coming soon",
+        allGamesBtn: "All games",
+        hubBtnTooltip: "Games hub",
+        badgeClassic: "Classic",
+        badgeSoon: "In dev"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -185,9 +195,19 @@ const i18n = {
         accountExistsFallback: "Аккаунт с таким email уже существует. Попробуйте другой способ входа.",
         signInTooltip: "Войти",
         nicknamePlaceholder: "Никнейм",
-        pageTitle: "RefyrdSnake",
+        pageTitle: "Refyrd Игры",
         fbReplyOne: "ответ",
         fbReplyFew: "ответов",
-        githubLink: "GitHub"
+        githubLink: "GitHub",
+        hubTitle: "ИГРЫ",
+        hubSubtitle: "Выбери игру",
+        gameSnakeTitle: "Змейка",
+        gameSnakeDesc: "Классическая аркадная змейка",
+        gameSoonTitle: "Арканоид",
+        gameSoonDesc: "Скоро появится",
+        allGamesBtn: "Все игры",
+        hubBtnTooltip: "Меню игр",
+        badgeClassic: "Классика",
+        badgeSoon: "В разработке"
     }
 };

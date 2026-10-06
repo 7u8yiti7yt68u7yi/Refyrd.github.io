@@ -83,6 +83,28 @@ function applyLanguage() {
     document.querySelector('#authLinkEmailView .auth-title').innerText = i18n[currentLang].authLinkEmail;
     authLinkEmailLink.innerText = i18n[currentLang].authLinkEmailBtn;
     authBtn.title = i18n[currentLang].signInTooltip;
+    const hubBtnEl = document.getElementById('hubBtn');
+    if (hubBtnEl) hubBtnEl.title = i18n[currentLang].hubBtnTooltip;
+    const uiHubTitle = document.getElementById('uiHubTitle');
+    if (uiHubTitle) uiHubTitle.innerText = i18n[currentLang].hubTitle;
+    const uiHubSubtitle = document.getElementById('uiHubSubtitle');
+    if (uiHubSubtitle) uiHubSubtitle.innerText = i18n[currentLang].hubSubtitle;
+    const uiGameSnakeTitle = document.getElementById('uiGameSnakeTitle');
+    if (uiGameSnakeTitle) uiGameSnakeTitle.innerText = i18n[currentLang].gameSnakeTitle;
+    const uiGameSnakeDesc = document.getElementById('uiGameSnakeDesc');
+    if (uiGameSnakeDesc) uiGameSnakeDesc.innerText = i18n[currentLang].gameSnakeDesc;
+    const uiGameSoonTitle = document.getElementById('uiGameSoonTitle');
+    if (uiGameSoonTitle) uiGameSoonTitle.innerText = i18n[currentLang].gameSoonTitle;
+    const uiGameSoonDesc = document.getElementById('uiGameSoonDesc');
+    if (uiGameSoonDesc) uiGameSoonDesc.innerText = i18n[currentLang].gameSoonDesc;
+    const uiSnakeToHubBtn = document.getElementById('uiSnakeToHubBtn');
+    if (uiSnakeToHubBtn) uiSnakeToHubBtn.innerText = i18n[currentLang].allGamesBtn;
+    const uiGameOverToHubBtn = document.getElementById('uiGameOverToHubBtn');
+    if (uiGameOverToHubBtn) uiGameOverToHubBtn.innerText = i18n[currentLang].allGamesBtn;
+    const uiBadgeClassic = document.getElementById('uiBadgeClassic');
+    if (uiBadgeClassic) uiBadgeClassic.innerText = i18n[currentLang].badgeClassic;
+    const uiBadgeSoon = document.getElementById('uiBadgeSoon');
+    if (uiBadgeSoon) uiBadgeSoon.innerText = i18n[currentLang].badgeSoon;
     const authDivider = document.querySelector('.auth-divider span');
     if (authDivider) authDivider.textContent = i18n[currentLang].or;
     authEmailBack.innerHTML = '&larr; ' + i18n[currentLang].back;
@@ -209,7 +231,8 @@ sizeBtns.forEach(btn => {
 const GameHub = {
     activeGame: 'snake',
     games: new Map([
-        ['snake', { id: 'snake', title: 'RefyrdSnake' }]
+        ['snake', { id: 'snake', title: 'RefyrdSnake', path: '/Snake' }],
+        ['breakout', { id: 'breakout', title: 'Breakout', path: '/Breakout', disabled: true }]
     ]),
     register(id, config) {
         this.games.set(id, config);
@@ -217,6 +240,10 @@ const GameHub = {
     switchGame(id) {
         if (!this.games.has(id)) return;
         this.activeGame = id;
+        if (typeof openGame === 'function') openGame(id, true);
+    },
+    showHub() {
+        if (typeof showHub === 'function') showHub(true);
     }
 };
 window.GameHub = GameHub;
@@ -1205,9 +1232,64 @@ const cCtx = confettiCanvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const startMenu = document.getElementById('startMenu');
 const gameOverScreen = document.getElementById('gameOverScreen');
+const hubMenu = document.getElementById('hubMenu');
+const hubBtn = document.getElementById('hubBtn');
+const hubCardSnake = document.getElementById('hubCardSnake');
+const uiSnakeToHubBtn = document.getElementById('uiSnakeToHubBtn');
+const uiGameOverToHubBtn = document.getElementById('uiGameOverToHubBtn');
 const menuHighScoreText = document.getElementById('menuHighScoreText');
 const menuLastScoreText = document.getElementById('menuLastScoreText');
 const playerNameInput = document.getElementById('playerNameInput');
+
+function updateRouteUrl(path, stateId) {
+    try {
+        if (window.location.protocol.startsWith('http')) {
+            window.history.pushState({ game: stateId }, '', path);
+        } else {
+            window.location.hash = stateId === 'menu' ? '' : stateId;
+        }
+    } catch (e) {
+        window.location.hash = stateId === 'menu' ? '' : stateId;
+    }
+}
+
+function showHub(pushState = true) {
+    isRunning = false;
+    document.body.classList.remove('gameplay');
+    gameOverScreen.classList.remove('active');
+    startMenu.classList.remove('active');
+    devMenu.classList.remove('active');
+    if (hubMenu) hubMenu.classList.add('active');
+    document.title = i18n[currentLang]?.pageTitle || 'Refyrd Games';
+    if (pushState) updateRouteUrl('/', 'menu');
+}
+
+function openGame(gameId, pushState = true) {
+    if (gameId === 'snake') {
+        GameHub.activeGame = 'snake';
+        if (hubMenu) hubMenu.classList.remove('active');
+        gameOverScreen.classList.remove('active');
+        devMenu.classList.remove('active');
+        startMenu.classList.add('active');
+        updateHighScoreDisplay();
+        resetGameState();
+        document.title = 'RefyrdSnake';
+        if (pushState) updateRouteUrl('/Snake', 'snake');
+    }
+}
+
+function resolveRoute() {
+    const path = (window.location.pathname || '').toLowerCase();
+    const hash = (window.location.hash || '').toLowerCase().replace('#', '');
+    const search = new URLSearchParams(window.location.search);
+    const gameParam = (search.get('game') || '').toLowerCase();
+
+    if (path.endsWith('/snake') || hash === 'snake' || gameParam === 'snake') {
+        openGame('snake', false);
+    } else {
+        showHub(false);
+    }
+}
 
 const initialSpeed = 150; 
 
@@ -1258,6 +1340,7 @@ setInterval(() => {
 function showMenu() {
     gameOverScreen.classList.remove('active');
     devMenu.classList.remove('active');
+    if (hubMenu) hubMenu.classList.remove('active');
     playerNameInput.disabled = false;
     playerNameInput.placeholder = i18n[currentLang].placeholder;
     startMenu.classList.add('active');
@@ -1265,6 +1348,7 @@ function showMenu() {
     updateHighScoreDisplay();
     resetGameState();
     document.body.classList.remove('gameplay');
+    updateRouteUrl('/Snake', 'snake');
 }
 
 function startGame() {
@@ -1358,6 +1442,16 @@ function closeTopOverlay() {
 		updateHighScoreDisplay();
 		return true;
 	}
+	if (isRunning) {
+		isRunning = false;
+		document.body.classList.remove('gameplay');
+		startMenu.classList.add('active');
+		return true;
+	}
+	if (startMenu.classList.contains('active') && (!hubMenu || !hubMenu.classList.contains('active'))) {
+		showHub(true);
+		return true;
+	}
 	return false;
 }
 
@@ -1365,9 +1459,10 @@ document.addEventListener('keydown', e => {
 	if (e.key === 'Escape') closeTopOverlay();
 });
 
-history.pushState(null, '');
 window.addEventListener('popstate', () => {
-	if (!closeTopOverlay()) history.pushState(null, '');
+	if (!closeTopOverlay()) {
+		resolveRoute();
+	}
 });
 
 function resetGameState() {
@@ -1680,6 +1775,19 @@ document.getElementById('uiDevAddScore').addEventListener('click', devAddScore);
 document.getElementById('uiDevFill').addEventListener('click', devFillSnake);
 document.getElementById('uiDevClose').addEventListener('click', closeDevMenu);
 
+if (hubCardSnake) {
+    hubCardSnake.addEventListener('click', () => openGame('snake', true));
+    hubCardSnake.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openGame('snake', true);
+        }
+    });
+}
+if (hubBtn) hubBtn.addEventListener('click', () => showHub(true));
+if (uiSnakeToHubBtn) uiSnakeToHubBtn.addEventListener('click', () => showHub(true));
+if (uiGameOverToHubBtn) uiGameOverToHubBtn.addEventListener('click', () => showHub(true));
+
 // === CONFETTI ===
 function triggerConfetti() {
     const colors = ['#ffb4ab', '#b7f397', '#9cd67d', '#ffffff', '#386a20'];
@@ -1727,4 +1835,4 @@ function updateConfetti() {
 
 resetGameState();
 requestAnimationFrame(animationLoop);
-
+resolveRoute();
