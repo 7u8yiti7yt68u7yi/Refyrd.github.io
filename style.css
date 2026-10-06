@@ -490,7 +490,7 @@ body {
 }
 .fb-entry .fb-name { font-weight: 700; font-size: 11px; opacity: 0.7; margin-bottom: 3px; }
 .fb-entry .fb-text { word-break: break-word; font-size: 12px; }
-.fb-entry .fb-text.collapsed { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.fb-entry .fb-text.collapsed { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .fb-entry .fb-text.expanded { display: block; }
 .fb-entry .fb-actions { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11px; }
 .fb-entry .fb-like, .fb-entry .fb-dislike { background: none; border: none; cursor: pointer; opacity: 0.6; font-size: 13px; padding: 2px 4px; display: inline-flex; align-items: center; gap: 3px; border-radius: 6px; }
@@ -1016,7 +1016,6 @@ body {
 .lb-show-more:hover { opacity: 1; }
 
 .leaderboard { left: 16px; }
-.leaderboard h3 { }
 
 .lb-entry {
     display: flex;
