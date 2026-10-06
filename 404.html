@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Refyrd Games</title>
+    <title>Redirecting...</title>
     <script>
-        // GitHub Pages SPA route redirector
-        var pathname = window.location.pathname;
-        var search = window.location.search;
-        var hash = window.location.hash;
-        window.location.replace('/?p=' + encodeURIComponent(pathname + search + hash));
+        var path = (window.location.pathname || '').toLowerCase();
+        if (path.includes('snake')) {
+            window.location.replace('/Snake/');
+        } else {
+            window.location.replace('/');
+        }
     </script>
 </head>
 <body>

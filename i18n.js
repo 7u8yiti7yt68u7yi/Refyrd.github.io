@@ -96,14 +96,20 @@ const i18n = {
         githubLink: "GitHub",
         hubTitle: "GAMES",
         hubSubtitle: "Select a game",
+        hubHeroTitle: "Refyrd Games",
+        hubHeroSubtitle: "Mini-games collection in Material Design 3 Expressive",
         gameSnakeTitle: "Snake",
-        gameSnakeDesc: "Classic arcade snake",
+        gameSnakeDesc: "Classic arcade snake with leaderboards and customizable field",
         gameSoonTitle: "Breakout",
-        gameSoonDesc: "Coming soon",
+        gameSoonDesc: "Brick breaking arcade with powerups and combos",
+        gamePongTitle: "Pong",
+        gamePongDesc: "Retro tennis against AI bot with reaction tests",
         allGamesBtn: "All games",
         hubBtnTooltip: "Games hub",
         badgeClassic: "Classic",
-        badgeSoon: "In dev"
+        badgeSoon: "In dev",
+        badgePlanned: "Planned",
+        badgePlayable: "Play"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -201,13 +207,19 @@ const i18n = {
         githubLink: "GitHub",
         hubTitle: "ИГРЫ",
         hubSubtitle: "Выбери игру",
+        hubHeroTitle: "Refyrd Игры",
+        hubHeroSubtitle: "Коллекция мини-игр в стиле Material Design 3 Expressive",
         gameSnakeTitle: "Змейка",
-        gameSnakeDesc: "Классическая аркадная змейка",
+        gameSnakeDesc: "Классическая аркадная змейка с таблицей рекордов и выбором поля",
         gameSoonTitle: "Арканоид",
-        gameSoonDesc: "Скоро появится",
+        gameSoonDesc: "Динамичный арканоид с разрушением кирпичей и бонусами",
+        gamePongTitle: "Понг",
+        gamePongDesc: "Ретро-теннис против смарт-бота на скорость реакции",
         allGamesBtn: "Все игры",
         hubBtnTooltip: "Меню игр",
         badgeClassic: "Классика",
-        badgeSoon: "В разработке"
+        badgeSoon: "В разработке",
+        badgePlanned: "В планах",
+        badgePlayable: "Играть"
     }
 };
