@@ -10,6 +10,7 @@ service cloud.firestore {
       allow update: if request.auth != null
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['likes', 'dislikes', 'commentCount']);
+      allow delete: if request.auth != null;
 
       // Votes subcollection
       match /votes/{voteKey} {
@@ -40,6 +41,7 @@ service cloud.firestore {
       allow update: if request.auth != null
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['likes', 'dislikes', 'commentCount']);
+      allow delete: if request.auth != null;
 
       // Votes subcollection
       match /votes/{voteKey} {

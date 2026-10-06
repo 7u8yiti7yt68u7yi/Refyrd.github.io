@@ -123,7 +123,8 @@ const i18n = {
         cookieSave: "Save Preferences",
         authSwitchRegister: "No account? Register",
         authSwitchSignIn: "Already have an account? Sign In",
-        authRegisterBtn: "Register"
+        authRegisterBtn: "Register",
+        deleteBtn: "Delete"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -248,6 +249,7 @@ const i18n = {
         cookieSave: "Сохранить выбор",
         authSwitchRegister: "Нет аккаунта? Зарегистрироваться",
         authSwitchSignIn: "Уже есть аккаунт? Войти",
-        authRegisterBtn: "Зарегистрироваться"
+        authRegisterBtn: "Зарегистрироваться",
+        deleteBtn: "Удалить"
     }
 };

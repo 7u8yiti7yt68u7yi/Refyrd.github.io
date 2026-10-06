@@ -498,6 +498,7 @@ async function loadHubFeedback(silent) {
             const msg = escapeHtml(d.message);
             const long = msg.length > 100;
             html += `<div class="fb-entry" data-id="${id}">
+                <button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>
                 <div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
                 <div class="fb-expand-row">
                     ${long ? '<button class="fb-expand">' + t.fbShowMore + '</button>' : ''}
@@ -689,10 +690,29 @@ async function submitComment(entry) {
     }
 }
 
+async function deleteFeedback(docId) {
+    if (!docId) return;
+    const entry = fbList ? fbList.querySelector(`.fb-entry[data-id="${docId}"]`) : null;
+    if (entry) entry.remove();
+    try {
+        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).delete();
+    } catch (e) {
+        console.warn('Delete feedback failed', e);
+        loadHubFeedback(true);
+    }
+}
+
 // Delegation for feedback interactions
 if (fbList) {
     fbList.addEventListener('click', (e) => {
         const t = i18n[currentLang] || i18n.ru;
+        const delBtn = e.target.closest('.fb-del-btn');
+        if (delBtn) {
+            const entry = delBtn.closest('.fb-entry');
+            if (!entry) return;
+            deleteFeedback(entry.dataset.id);
+            return;
+        }
         const expandBtn = e.target.closest('.fb-expand');
         if (expandBtn) {
             const entry = expandBtn.closest('.fb-entry');

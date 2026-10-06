@@ -135,82 +135,47 @@
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-modal">
             <button class="auth-close" id="authClose">&times;</button>
-
-            <div id="authMainView">
+            
+            <div id="authMainView" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px;">
                 <div class="auth-title" id="authTitle">Sign In</div>
-                <div class="auth-social">
-                    <button class="auth-social-btn auth-email-btn" id="authEmailBtn">
-                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-.4 4.25l-6.54 4.09c-.65.41-1.47.41-2.12 0L4.4 8.25c-.25-.16-.4-.43-.4-.72 0-.67.73-1.07 1.3-.72L12 11l6.7-4.19c.57-.35 1.3.05 1.3.72 0 .29-.15.56-.4.72z"/></svg>
-                        Sign in with Email
-                    </button>
-                </div>
-                <div class="auth-divider"><span>or</span></div>
+                
+                <input type="email" id="authEmail" class="name-input" placeholder="Email" autocomplete="email">
+                <input type="password" id="authPassword" class="name-input" placeholder="Password" autocomplete="current-password">
+                <input type="text" id="authRegNick" class="name-input" style="display:none" placeholder="Nickname" maxlength="12" autocomplete="off">
+                
+                <button class="btn-primary" id="authSubmitBtn" style="height: 42px; font-size: 14px;">Sign In</button>
+                <button class="auth-toggle-btn" id="authToggleRegister" style="background:none; border:none; color:var(--md-sys-color-primary); font-size:12px; font-weight:600; cursor:pointer; opacity:0.85;">No account? Register</button>
+                
+                <div class="auth-divider"><span id="uiAuthDividerText">or</span></div>
+                
                 <div class="auth-social">
                     <button class="auth-social-btn" id="authGoogle">
-                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                        Sign in with Google
+                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+                        <span>Google</span>
                     </button>
                     <button class="auth-social-btn" id="authGithub">
-                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-                        Sign in with GitHub
+                        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                        <span>GitHub</span>
                     </button>
                 </div>
                 <div class="auth-status" id="authStatus"></div>
             </div>
 
-            <div id="authEmailView" style="display:none">
-                <button class="auth-back" id="authEmailBack">&larr; Back</button>
-                <div class="auth-title" id="authEmailTitle">Email</div>
-                <input type="email" id="authEmail" class="name-input" placeholder="Email" autocomplete="email">
-                <input type="password" id="authPassword" class="name-input" placeholder="Password" autocomplete="current-password">
-                <button class="btn-primary" id="authEmailSignIn">Sign In</button>
-                <input type="text" id="authRegNick" class="name-input" style="display:none" placeholder="Nickname" maxlength="12" autocomplete="off">
-                <button class="btn-secondary" id="authEmailRegister">Register</button>
-                <div class="auth-status" id="authEmailStatus"></div>
-            </div>
-
-            <div id="authAccountView" style="display:none">
-                <div class="auth-title">Account</div>
+            <div id="authAccountView" style="display:none; width: 100%; flex-direction: column; align-items: center; gap: 14px;">
+                <div class="auth-title" id="authAccountTitle">Account</div>
                 <div class="auth-info-line" id="accEmail"></div>
-
-                <div class="auth-acc-section">
-                    <div class="auth-acc-label">Linked providers</div>
-                    <div class="auth-providers" id="accProviders"></div>
-                    <div class="auth-acc-label">Link another</div>
-                    <div class="auth-providers">
-                        <button class="auth-prov-btn" data-prov="google">+ Google</button>
-                        <button class="auth-prov-btn" data-prov="github">+ GitHub</button>
-                        <button class="auth-prov-btn" id="accLinkEmailBtn" data-prov="password">+ Email</button>
+                
+                <div class="auth-acc-section" style="width: 100%;">
+                    <div class="auth-acc-label" id="uiAccNickLabel" style="font-size: 11px; opacity: 0.6; margin-bottom: 4px; text-transform: uppercase;">Nickname</div>
+                    <div style="display:flex; gap:8px; width:100%; align-items:center;">
+                        <input type="text" id="accNickInput" class="name-input" placeholder="Nickname" maxlength="12" autocomplete="off">
+                        <button class="btn-primary" id="accNickSave" style="width:auto; padding:0 16px; height:42px; font-size:13px; flex-shrink:0;">Save</button>
                     </div>
+                    <div id="accNickStatus" style="font-size:11px; opacity:0.7; text-align:center; width:100%; margin-top:4px;"></div>
                 </div>
 
-                <div class="auth-acc-section">
-                    <div class="auth-acc-label">Nickname</div>
-                    <div style="display:flex; gap:8px; width:100%; align-items:center">
-                        <div style="position:relative; flex:1">
-                            <input type="text" id="accNickInput" class="name-input" placeholder="Nickname" maxlength="12" autocomplete="off">
-                            <span id="accNickLock" style="display:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:16px; pointer-events:none">🔒</span>
-                        </div>
-                        <button class="btn-primary" id="accNickSave" style="width:auto; padding:0 20px; flex-shrink:0">Save</button>
-                    </div>
-                    <div id="accNickStatus" style="font-size:11px; opacity:0.6; text-align:center; width:100%"></div>
-                </div>
-
-                <button class="auth-social-btn" id="authSignOutBtn" style="margin-top:4px">Sign Out</button>
-
-                <div id="authLinkEmailView" style="display:none; width:100%">
-                    <hr style="width:100%; opacity:0.2; margin:8px 0">
-                    <div style="display:flex; align-items:center; gap:8px; width:100%">
-                        <button class="auth-back" id="authLinkEmailBack">&larr;</button>
-                        <div class="auth-title" style="flex:1; text-align:left">Link Email</div>
-                    </div>
-                    <input type="email" id="authLinkEmail" class="name-input" placeholder="Email" autocomplete="email">
-                    <input type="password" id="authLinkPassword" class="name-input" placeholder="Password" autocomplete="new-password">
-                    <button class="btn-primary" id="authLinkEmailLink">Link</button>
-                    <div class="auth-status" id="authLinkEmailStatus"></div>
-                </div>
+                <button class="btn-secondary" id="authSignOutBtn" style="margin-top: 8px; width: 100%; height: 40px; font-size: 13px;">Sign Out</button>
             </div>
-
         </div>
     </div>
 
