@@ -83,28 +83,6 @@ function applyLanguage() {
     document.querySelector('#authLinkEmailView .auth-title').innerText = i18n[currentLang].authLinkEmail;
     authLinkEmailLink.innerText = i18n[currentLang].authLinkEmailBtn;
     authBtn.title = i18n[currentLang].signInTooltip;
-    const hubBtnEl = document.getElementById('hubBtn');
-    if (hubBtnEl) hubBtnEl.title = i18n[currentLang].hubBtnTooltip;
-    const uiHubTitle = document.getElementById('uiHubTitle');
-    if (uiHubTitle) uiHubTitle.innerText = i18n[currentLang].hubTitle;
-    const uiHubSubtitle = document.getElementById('uiHubSubtitle');
-    if (uiHubSubtitle) uiHubSubtitle.innerText = i18n[currentLang].hubSubtitle;
-    const uiGameSnakeTitle = document.getElementById('uiGameSnakeTitle');
-    if (uiGameSnakeTitle) uiGameSnakeTitle.innerText = i18n[currentLang].gameSnakeTitle;
-    const uiGameSnakeDesc = document.getElementById('uiGameSnakeDesc');
-    if (uiGameSnakeDesc) uiGameSnakeDesc.innerText = i18n[currentLang].gameSnakeDesc;
-    const uiGameSoonTitle = document.getElementById('uiGameSoonTitle');
-    if (uiGameSoonTitle) uiGameSoonTitle.innerText = i18n[currentLang].gameSoonTitle;
-    const uiGameSoonDesc = document.getElementById('uiGameSoonDesc');
-    if (uiGameSoonDesc) uiGameSoonDesc.innerText = i18n[currentLang].gameSoonDesc;
-    const uiSnakeToHubBtn = document.getElementById('uiSnakeToHubBtn');
-    if (uiSnakeToHubBtn) uiSnakeToHubBtn.innerText = i18n[currentLang].allGamesBtn;
-    const uiGameOverToHubBtn = document.getElementById('uiGameOverToHubBtn');
-    if (uiGameOverToHubBtn) uiGameOverToHubBtn.innerText = i18n[currentLang].allGamesBtn;
-    const uiBadgeClassic = document.getElementById('uiBadgeClassic');
-    if (uiBadgeClassic) uiBadgeClassic.innerText = i18n[currentLang].badgeClassic;
-    const uiBadgeSoon = document.getElementById('uiBadgeSoon');
-    if (uiBadgeSoon) uiBadgeSoon.innerText = i18n[currentLang].badgeSoon;
     const authDivider = document.querySelector('.auth-divider span');
     if (authDivider) authDivider.textContent = i18n[currentLang].or;
     authEmailBack.innerHTML = '&larr; ' + i18n[currentLang].back;
@@ -176,7 +154,7 @@ themeToggle.addEventListener('click', () => {
 
 // === ВЫБОР ЦВЕТА И РАЗМЕРА ===
 const colorBtns = document.querySelectorAll('.color-btn');
-const savedColor = getCookie('snakeColor') || 'green';
+const savedColor = getCookie('snakeColor') || 'neutral';
 colorBtns.forEach(btn => {
     if (btn.getAttribute('data-c') === savedColor) {
         colorBtns.forEach(b => b.classList.remove('active'));
@@ -231,8 +209,7 @@ sizeBtns.forEach(btn => {
 const GameHub = {
     activeGame: 'snake',
     games: new Map([
-        ['snake', { id: 'snake', title: 'RefyrdSnake', path: '/Snake' }],
-        ['breakout', { id: 'breakout', title: 'Breakout', path: '/Breakout', disabled: true }]
+        ['snake', { id: 'snake', title: 'RefyrdSnake' }]
     ]),
     register(id, config) {
         this.games.set(id, config);
@@ -240,10 +217,6 @@ const GameHub = {
     switchGame(id) {
         if (!this.games.has(id)) return;
         this.activeGame = id;
-        if (typeof openGame === 'function') openGame(id, true);
-    },
-    showHub() {
-        if (typeof showHub === 'function') showHub(true);
     }
 };
 window.GameHub = GameHub;
@@ -1235,6 +1208,7 @@ const gameOverScreen = document.getElementById('gameOverScreen');
 const menuHighScoreText = document.getElementById('menuHighScoreText');
 const menuLastScoreText = document.getElementById('menuLastScoreText');
 const playerNameInput = document.getElementById('playerNameInput');
+
 const initialSpeed = 150; 
 
 let snake = [];
@@ -1384,17 +1358,16 @@ function closeTopOverlay() {
 		updateHighScoreDisplay();
 		return true;
 	}
-	if (isRunning) {
-		isRunning = false;
-		document.body.classList.remove('gameplay');
-		startMenu.classList.add('active');
-		return true;
-	}
 	return false;
 }
 
 document.addEventListener('keydown', e => {
 	if (e.key === 'Escape') closeTopOverlay();
+});
+
+history.pushState(null, '');
+window.addEventListener('popstate', () => {
+	if (!closeTopOverlay()) history.pushState(null, '');
 });
 
 function resetGameState() {
@@ -1707,8 +1680,6 @@ document.getElementById('uiDevAddScore').addEventListener('click', devAddScore);
 document.getElementById('uiDevFill').addEventListener('click', devFillSnake);
 document.getElementById('uiDevClose').addEventListener('click', closeDevMenu);
 
-
-
 // === CONFETTI ===
 function triggerConfetti() {
     const colors = ['#ffb4ab', '#b7f397', '#9cd67d', '#ffffff', '#386a20'];
@@ -1756,3 +1727,4 @@ function updateConfetti() {
 
 resetGameState();
 requestAnimationFrame(animationLoop);
+
