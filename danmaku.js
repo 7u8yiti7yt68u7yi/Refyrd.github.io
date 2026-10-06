@@ -160,8 +160,8 @@ const player = {
     y: GAME_HEIGHT - 70,
     w: 26,
     h: 30,
-    speedNormal: 4.8,
-    speedFocus: 2.2,
+    speedNormal: 3.6,
+    speedFocus: 1.7,
     focused: false,
     invincibleTimer: 0,
     shootCooldown: 0,
@@ -192,29 +192,52 @@ let isTouching = false;
 let touchX = 0;
 let touchY = 0;
 
-// === CONTROLS LISTENERS ===
-window.addEventListener('keydown', (e) => {
-    if (e.repeat && e.key.toLowerCase() !== 'z' && e.key !== ' ') return;
-    const k = e.key.toLowerCase();
-    if (k === 'arrowleft' || k === 'a') keys.left = true;
-    if (k === 'arrowright' || k === 'd') keys.right = true;
-    if (k === 'arrowup' || k === 'w') keys.up = true;
-    if (k === 'arrowdown' || k === 's') keys.down = true;
-    if (e.key === 'Shift') keys.focus = true;
-    if (k === 'z' || k === ' ') keys.shoot = true;
-    if (k === 'x') triggerBomb();
-    if (k === 'escape' || k === 'p') togglePause();
-});
+// === CONTROLS LISTENERS (Layout-independent via e.code + Cyrillic fallback) ===
+function handleDanmakuKey(e, isDown) {
+    const code = e.code;
+    const k = (e.key || '').toLowerCase();
 
-window.addEventListener('keyup', (e) => {
-    const k = e.key.toLowerCase();
-    if (k === 'arrowleft' || k === 'a') keys.left = false;
-    if (k === 'arrowright' || k === 'd') keys.right = false;
-    if (k === 'arrowup' || k === 'w') keys.up = false;
-    if (k === 'arrowdown' || k === 's') keys.down = false;
-    if (e.key === 'Shift') keys.focus = false;
-    if (k === 'z' || k === ' ') keys.shoot = false;
-});
+    let handled = false;
+    if (code === 'KeyA' || code === 'ArrowLeft' || k === 'a' || k === 'ф' || k === 'arrowleft') {
+        keys.left = isDown;
+        handled = true;
+    }
+    if (code === 'KeyD' || code === 'ArrowRight' || k === 'd' || k === 'в' || k === 'arrowright') {
+        keys.right = isDown;
+        handled = true;
+    }
+    if (code === 'KeyW' || code === 'ArrowUp' || k === 'w' || k === 'ц' || k === 'arrowup') {
+        keys.up = isDown;
+        handled = true;
+    }
+    if (code === 'KeyS' || code === 'ArrowDown' || k === 's' || k === 'ы' || k === 'arrowdown') {
+        keys.down = isDown;
+        handled = true;
+    }
+    if (code === 'ShiftLeft' || code === 'ShiftRight' || k === 'shift') {
+        keys.focus = isDown;
+        handled = true;
+    }
+    if (code === 'KeyZ' || code === 'Space' || k === 'z' || k === 'я' || k === ' ') {
+        keys.shoot = isDown;
+        handled = true;
+    }
+    if (isDown && !e.repeat && (code === 'KeyX' || k === 'x' || k === 'ч')) {
+        triggerBomb();
+        handled = true;
+    }
+    if (isDown && !e.repeat && (code === 'KeyP' || code === 'Escape' || k === 'p' || k === 'з' || k === 'escape')) {
+        togglePause();
+        handled = true;
+    }
+
+    if (handled && e.cancelable && code !== 'F5' && code !== 'F12') {
+        e.preventDefault();
+    }
+}
+
+window.addEventListener('keydown', (e) => handleDanmakuKey(e, true));
+window.addEventListener('keyup', (e) => handleDanmakuKey(e, false));
 
 // Canvas touch drag
 function getCanvasCoords(clientX, clientY) {
@@ -491,21 +514,45 @@ function spawnRandomEnemy(tier) {
 }
 
 function spawnBoss(milestone) {
+    const t = i18n[currentLang] || i18n.ru;
+    let bId = 'vespera';
+    let bName = t.bossVespera || 'Веспера, Ткачиха Сумерек';
+    let spell = currentLang === 'ru' ? 'Сумеречная Паутина' : 'Twilight Filament';
+    let bHp = 1400;
+    let bColor = '#E040FB';
+
+    if (milestone > 120) {
+        bId = 'solaria';
+        bName = t.bossSolaria || 'Солярия, Императрица Вспышек';
+        spell = currentLang === 'ru' ? 'Мандала Сверхновой' : 'Supernova Mandala';
+        bHp = 3400;
+        bColor = '#FF1744';
+    } else if (milestone > 60) {
+        bId = 'chronos';
+        bName = t.bossChronos || 'Хронос Ирис, Пульс Вечности';
+        spell = currentLang === 'ru' ? 'Горизонт Сингулярности' : 'Singularity Horizon';
+        bHp = 2300;
+        bColor = '#FFD700';
+    }
+
     boss = {
-        name: milestone <= 50 ? 'Scarlet Orb: Remilia Core' : 'Starlight Prism: Marisa Heart',
+        id: bId,
+        name: bName,
+        spellName: spell,
+        color: bColor,
         x: GAME_WIDTH / 2,
         y: -50,
         targetY: 90,
-        hp: 1200 + milestone * 15,
-        maxHp: 1200 + milestone * 15,
-        w: 42,
-        h: 42,
+        hp: bHp,
+        maxHp: bHp,
+        w: 46,
+        h: 46,
         timer: 0,
         phaseTimer: 0,
         phase: 1,
         angle: 0
     };
-    addFloatingText(GAME_WIDTH / 2, 70, 'BOSS WARNING!', '#FF1744', 20);
+    addFloatingText(GAME_WIDTH / 2, 70, (currentLang === 'ru' ? 'ПРИБЛИЖЕНИЕ БОССА!' : 'BOSS WARNING!'), bColor, 20);
 }
 
 // === PARTICLES & FLOATING TEXTS ===
@@ -702,23 +749,50 @@ function update(dt) {
         boss.timer += dt;
         boss.phaseTimer += dt;
         boss.y += (boss.targetY - boss.y) * 0.04;
-        boss.x = GAME_WIDTH / 2 + Math.sin(boss.timer * 1.1) * 70;
+        boss.x = GAME_WIDTH / 2 + Math.sin(boss.timer * 1.05) * 75;
         boss.angle += dt * 1.8;
 
-        // Boss Danmaku attack cycles
-        const attackCycle = boss.timer % 6.0;
-        if (attackCycle < 3.5) {
-            // Spiral blossom
-            if (Math.floor(boss.timer * 20) % 4 === 0) {
-                const spd = 2.4;
-                const a = boss.angle;
-                enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 4, color: '#E040FB', shape: 'star', grazed: false });
-                enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a + Math.PI) * spd, vy: Math.sin(a + Math.PI) * spd, r: 4, color: '#00E5FF', shape: 'star', grazed: false });
+        if (boss.id === 'vespera') {
+            // Vespera: Twilight Weaver (Spirals & Stardust)
+            const attackCycle = boss.timer % 5.5;
+            if (attackCycle < 3.4) {
+                if (Math.floor(boss.timer * 20) % 4 === 0) {
+                    const spd = 2.4;
+                    const a = boss.angle;
+                    enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 4, color: '#E040FB', shape: 'star', grazed: false });
+                    enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a + Math.PI) * spd, vy: Math.sin(a + Math.PI) * spd, r: 4, color: '#00E5FF', shape: 'star', grazed: false });
+                }
+            } else if (attackCycle >= 3.8 && attackCycle < 4.8) {
+                if (Math.floor(boss.timer * 10) % 3 === 0) {
+                    spawnBulletAimed(boss.x, boss.y, 7, 2.7, 0.18, '#B388FF', 3.5, 'needle');
+                }
             }
-        } else if (attackCycle >= 4.0 && attackCycle < 4.8) {
-            // Aimed flower burst
-            if (Math.floor(boss.timer * 10) % 3 === 0) {
-                spawnBulletAimed(boss.x, boss.y, 7, 2.8, 0.18, '#FF1744', 4, 'needle');
+        } else if (boss.id === 'chronos') {
+            // Chronos Iris: Pulse of Eternity (Clockwork rings & Pendulums)
+            const attackCycle = boss.timer % 6.0;
+            if (attackCycle < 3.8) {
+                if (Math.floor(boss.timer * 12) % 4 === 0) {
+                    spawnBulletRing(boss.x, boss.y, 12, 2.2, '#FFD700', 4.5, 'circle', boss.angle);
+                }
+            } else if (attackCycle >= 4.2 && attackCycle < 5.4) {
+                if (Math.floor(boss.timer * 10) % 2 === 0) {
+                    spawnBulletAimed(boss.x, boss.y, 5, 3.2, 0.16, '#FFAB00', 4, 'needle');
+                }
+            }
+        } else {
+            // Solaria: Flare Empress (Solar corona & Supernova spreads)
+            const attackCycle = boss.timer % 6.5;
+            if (attackCycle < 4.2) {
+                if (Math.floor(boss.timer * 16) % 3 === 0) {
+                    const spd = 2.8;
+                    const a = boss.angle * 1.4;
+                    enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 4.5, color: '#FF1744', shape: 'circle', grazed: false });
+                    enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(-a) * spd, vy: Math.sin(-a) * spd, r: 4.5, color: '#FF9100', shape: 'star', grazed: false });
+                }
+            } else if (attackCycle >= 4.6 && attackCycle < 6.0) {
+                if (Math.floor(boss.timer * 10) % 2 === 0) {
+                    spawnBulletAimed(boss.x, boss.y, 9, 3.1, 0.16, '#D50000', 4, 'needle');
+                }
             }
         }
     }
@@ -1117,60 +1191,152 @@ function drawBoss(b, colors) {
     ctx.save();
     ctx.translate(b.x, b.y);
 
-    // Rotating magical glyph ring
-    ctx.save();
-    ctx.rotate(b.angle);
-    ctx.strokeStyle = 'rgba(224, 64, 251, 0.45)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(0, 0, 32, 0, Math.PI * 2);
-    ctx.stroke();
+    if (b.id === 'vespera') {
+        // Vespera: The Twilight Weaver (Amethyst Astral Mandala)
+        ctx.save();
+        ctx.rotate(b.angle);
+        ctx.strokeStyle = 'rgba(224, 64, 251, 0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 32, 0, Math.PI * 2);
+        ctx.stroke();
 
-    for (let i = 0; i < 6; i++) {
-        const a = (i * Math.PI) / 3;
-        ctx.fillStyle = colors.tertiary;
-        ctx.fillRect(Math.cos(a) * 32 - 2, Math.sin(a) * 32 - 2, 4, 4);
+        for (let i = 0; i < 4; i++) {
+            const a = (i * Math.PI) / 2;
+            const ox = Math.cos(a) * 32;
+            const oy = Math.sin(a) * 32;
+            ctx.fillStyle = '#00E5FF';
+            ctx.shadowColor = '#00E5FF';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.moveTo(ox, oy - 5);
+            ctx.lineTo(ox + 4, oy);
+            ctx.lineTo(ox, oy + 5);
+            ctx.lineTo(ox - 4, oy);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.shadowColor = '#E040FB';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#7B1FA2';
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#EA80FC';
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (b.id === 'chronos') {
+        // Chronos Iris: Pulse of Eternity (Clockwork Halos & Pendulums)
+        ctx.save();
+        ctx.rotate(b.angle);
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 30, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(255, 171, 0, 0.35)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 38, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 8 clockwork gear teeth
+        for (let i = 0; i < 8; i++) {
+            const a = (i * Math.PI) / 4;
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(Math.cos(a) * 30 - 2, Math.sin(a) * 30 - 2, 4, 4);
+        }
+        ctx.restore();
+
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = '#FF8F00';
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFE082';
+        ctx.beginPath();
+        ctx.arc(0, 0, 9, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // Solaria: The Flare Empress (Blazing Solar Corona)
+        ctx.save();
+        ctx.rotate(-b.angle * 1.5);
+        ctx.fillStyle = 'rgba(255, 87, 34, 0.4)';
+        for (let i = 0; i < 8; i++) {
+            const a = (i * Math.PI) / 4;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 16, Math.sin(a) * 16);
+            ctx.lineTo(Math.cos(a + 0.2) * 36, Math.sin(a + 0.2) * 36);
+            ctx.lineTo(Math.cos(a + 0.4) * 16, Math.sin(a + 0.4) * 16);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.shadowColor = '#FF1744';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#D50000';
+        ctx.beginPath();
+        ctx.arc(0, 0, 17, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FF6D00';
+        ctx.beginPath();
+        ctx.arc(0, 0, 11, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFF00';
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
     }
-    ctx.restore();
-
-    // Central Boss Core (Crystal Scarlet Mandala)
-    ctx.shadowColor = colors.error;
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = '#C2185B';
-    ctx.beginPath();
-    ctx.arc(0, 0, 16, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#F48FB1';
-    ctx.beginPath();
-    ctx.arc(0, 0, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(0, 0, 4, 0, Math.PI * 2);
-    ctx.fill();
 
     ctx.restore();
 
-    // Boss Top Health Bar
+    // Boss Top Health Bar & Spell Banner
     const hpPct = Math.max(0, b.hp / b.maxHp);
     const barWidth = GAME_WIDTH - 60;
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.roundRect(30, 16, barWidth, 6, 3);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.roundRect(30, 18, barWidth, 6, 3);
     ctx.fill();
 
-    ctx.fillStyle = colors.error;
-    ctx.shadowColor = colors.error;
-    ctx.shadowBlur = 6;
-    ctx.roundRect(30, 16, barWidth * hpPct, 6, 3);
+    ctx.fillStyle = b.color;
+    ctx.shadowColor = b.color;
+    ctx.shadowBlur = 8;
+    ctx.roundRect(30, 18, barWidth * hpPct, 6, 3);
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '700 11px system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(b.name, 32, 12);
+    ctx.fillText(b.name, 32, 14);
+
+    ctx.fillStyle = b.color;
+    ctx.textAlign = 'right';
+    ctx.font = '600 10px system-ui, sans-serif';
+    ctx.fillText(b.spellName, GAME_WIDTH - 32, 14);
     ctx.restore();
 }
 
@@ -1322,6 +1488,13 @@ function applyLanguage() {
     if (menuHigh) menuHigh.innerText = t.bestScore + highScore.toLocaleString();
     const menuLast = document.getElementById('menuLastScoreText');
     if (menuLast) menuLast.innerText = t.lastScore + lastScore.toLocaleString();
+
+    const homeBtnEl = document.getElementById('homeBtn');
+    if (homeBtnEl) homeBtnEl.title = t.homeTooltip || 'Home';
+    const paletteBtnEl = document.getElementById('paletteBtn');
+    if (paletteBtnEl) paletteBtnEl.title = t.paletteTooltip || 'Theme & Palette';
+    const modeText = document.getElementById('uiThemeModeText');
+    if (modeText) modeText.textContent = isDark ? (t.themeModeDark || 'Dark mode') : (t.themeModeLight || 'Light mode');
 }
 
 // Language toggle
@@ -1376,14 +1549,27 @@ function applyColor(c) {
 }
 
 // Theme Toggle (Dark / Light)
-const themeToggle = document.getElementById('themeToggle');
+const sunPathSvg = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 000-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>';
+const moonPathSvg = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+
 function applyTheme() {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
     setCookie('snakeTheme', isDark ? 'dark' : 'light', 365);
+
+    const modeIcon = document.getElementById('themeModeIcon');
+    if (modeIcon) modeIcon.innerHTML = isDark ? moonPathSvg : sunPathSvg;
+    const modeText = document.getElementById('uiThemeModeText');
+    if (modeText) {
+        const t = (typeof i18n !== 'undefined' && i18n[currentLang]) ? i18n[currentLang] : null;
+        modeText.textContent = isDark ? (t?.themeModeDark || 'Dark mode') : (t?.themeModeLight || 'Light mode');
+    }
 }
-if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
+
+const themeModeToggle = document.getElementById('themeModeToggle') || document.getElementById('themeToggle');
+if (themeModeToggle) {
+    themeModeToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
         isDark = !isDark;
         applyTheme();
     });

@@ -47,6 +47,10 @@ function applyLanguage() {
     const gameOverToHub = document.getElementById('uiGameOverToHubBtn');
     if (gameOverToHub) gameOverToHub.innerText = i18n[currentLang].allGamesBtn;
 
+    const homeBtnEl = document.getElementById('homeBtn');
+    if (homeBtnEl) homeBtnEl.title = i18n[currentLang].homeTooltip || 'Home';
+    const modeText = document.getElementById('uiThemeModeText');
+    if (modeText) modeText.textContent = isDark ? (i18n[currentLang].themeModeDark || 'Dark mode') : (i18n[currentLang].themeModeLight || 'Light mode');
     const paletteBtnEl = document.getElementById('paletteBtn');
     if (paletteBtnEl) paletteBtnEl.title = i18n[currentLang].paletteTooltip || (currentLang === 'ru' ? 'Цветовая тема' : 'Theme color');
     const palettePopoverEl = document.getElementById('palettePopover');
@@ -218,21 +222,32 @@ function getResolvedColor(cssVarName) {
     return getComputedStyle(document.body).getPropertyValue(varName).trim() || cssVarName;
 }
 
-const sunSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>`;
-const moonSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 2a10 10 0 0 0-.19 14 9.92 9.92 0 0 0 7.9 3.99 10.14 10.14 0 0 0 1.9-.18 10 10 0 1 1-9.61-17.81z"/></svg>`;
+const sunPathSvg = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 000-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>';
+const moonPathSvg = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
 
 function applyTheme() {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     body.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    themeToggle.innerHTML = isDark ? sunSvg : moonSvg;
+    const modeIcon = document.getElementById('themeModeIcon');
+    if (modeIcon) modeIcon.innerHTML = isDark ? moonPathSvg : sunPathSvg;
+    const modeText = document.getElementById('uiThemeModeText');
+    if (modeText) {
+        const t = (typeof i18n !== 'undefined' && i18n[currentLang]) ? i18n[currentLang] : null;
+        modeText.textContent = isDark ? (t?.themeModeDark || 'Dark mode') : (t?.themeModeLight || 'Light mode');
+    }
+    const themeToggleEl = document.getElementById('themeToggle');
+    if (themeToggleEl) themeToggleEl.innerHTML = isDark ? sunPathSvg : moonPathSvg;
 }
 applyTheme();
 
-themeToggle.addEventListener('click', () => {
-    isDark = !isDark;
-    setCookie('snakeTheme', isDark ? 'dark' : 'light');
-    applyTheme();
-});
+const themeModeToggle = document.getElementById('themeModeToggle') || document.getElementById('themeToggle');
+if (themeModeToggle) {
+    themeModeToggle.addEventListener('click', () => {
+        isDark = !isDark;
+        setCookie('snakeTheme', isDark ? 'dark' : 'light', 365);
+        applyTheme();
+    });
+}
 
 // === ВЫБОР ЦВЕТА И РАЗМЕРА ===
 const colorBtns = document.querySelectorAll('.color-btn');
@@ -1946,36 +1961,36 @@ function changeDirection(newDx, newDy) {
     inputQueue.push({ dx: newDx, dy: newDy });
 }
 
+function getSnakeDirection(e) {
+    const code = e.code;
+    const k = (e.key || '').toLowerCase();
+    if (code === 'KeyA' || code === 'ArrowLeft' || k === 'a' || k === 'ф' || k === 'arrowleft') return [-1, 0];
+    if (code === 'KeyD' || code === 'ArrowRight' || k === 'd' || k === 'в' || k === 'arrowright') return [1, 0];
+    if (code === 'KeyW' || code === 'ArrowUp' || k === 'w' || k === 'ц' || k === 'arrowup') return [0, -1];
+    if (code === 'KeyS' || code === 'ArrowDown' || k === 's' || k === 'ы' || k === 'arrowdown') return [0, 1];
+    return [0, 0];
+}
+
 const _heldKeys = new Set();
 document.addEventListener('keydown', (e) => {
     if (document.activeElement === playerNameInput) {
         if (e.key === 'Enter') startGame();
         return;
     }
-    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight", " "].indexOf(e.code) > -1) e.preventDefault();
-    let ndx = 0, ndy = 0;
-    switch(e.key) {
-        case 'ArrowLeft': case 'a': case 'A': case 'ф': case 'Ф': ndx = -1; break;
-        case 'ArrowRight': case 'd': case 'D': case 'в': case 'В': ndx = 1; break;
-        case 'ArrowUp': case 'w': case 'W': case 'ц': case 'Ц': ndy = -1; break;
-        case 'ArrowDown': case 's': case 'S': case 'ы': case 'Ы': ndy = 1; break;
+    const [ndx, ndy] = getSnakeDirection(e);
+    if (ndx !== 0 || ndy !== 0) {
+        if (e.cancelable) e.preventDefault();
+        const key = `${ndx},${ndy}`;
+        if (_heldKeys.has(key)) return;
+        _heldKeys.add(key);
+        changeDirection(ndx, ndy);
     }
-    if (ndx === 0 && ndy === 0) return;
-    const key = `${ndx},${ndy}`;
-    if (_heldKeys.has(key)) return;
-    _heldKeys.add(key);
-    changeDirection(ndx, ndy);
 });
 document.addEventListener('keyup', (e) => {
-    let ndx = 0, ndy = 0;
-    switch(e.key) {
-        case 'ArrowLeft': case 'a': case 'A': case 'ф': case 'Ф': ndx = -1; break;
-        case 'ArrowRight': case 'd': case 'D': case 'в': case 'В': ndx = 1; break;
-        case 'ArrowUp': case 'w': case 'W': case 'ц': case 'Ц': ndy = -1; break;
-        case 'ArrowDown': case 's': case 'S': case 'ы': case 'Ы': ndy = 1; break;
+    const [ndx, ndy] = getSnakeDirection(e);
+    if (ndx !== 0 || ndy !== 0) {
+        _heldKeys.delete(`${ndx},${ndy}`);
     }
-    if (ndx === 0 && ndy === 0) return;
-    _heldKeys.delete(`${ndx},${ndy}`);
 });
 
 // === TOUCH ===
