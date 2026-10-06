@@ -8,6 +8,9 @@ function getCookie(name) {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     return match ? decodeURIComponent(match[2]) : null;
 }
+function deleteCookie(name) {
+    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+}
 
 // === ЛОКАЛИЗАЦИЯ (см. i18n.js) ===
 
@@ -323,14 +326,15 @@ if (authToggleRegister) {
 }
 
 function updateAuthUI() {
-    const isLoggedIn = authUser && !authUser.isAnonymous;
+    const isLoggedIn = (authUser && !authUser.isAnonymous) || getCookie('isLoggedIn') === '1';
     if (isLoggedIn) {
         if (authBtn) {
             authBtn.style.color = 'var(--md-sys-color-primary)';
-            authBtn.title = authUser.displayName || authUser.email || (i18n[currentLang] || i18n.ru).authAccount;
+            authBtn.title = (authUser && (authUser.displayName || authUser.email)) || getCookie('snakeNick') || getCookie('authEmail') || (i18n[currentLang] || i18n.ru).authAccount;
         }
-        if (accEmail) accEmail.textContent = authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : '');
-        if (accNickInput) accNickInput.value = savedName || authUser.displayName || '';
+        const email = (authUser && (authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : ''))) || getCookie('authEmail') || '';
+        if (accEmail) accEmail.textContent = email;
+        if (accNickInput) accNickInput.value = savedName || (authUser && authUser.displayName) || getCookie('snakeNick') || '';
         if (authMainView) authMainView.style.display = 'none';
         if (authAccountView) authAccountView.style.display = 'flex';
         loadNicknameFromFirestore();
@@ -358,6 +362,9 @@ if (authOverlay) authOverlay.addEventListener('click', e => { if (e.target === a
 
 if (authSignOutBtn) {
     authSignOutBtn.addEventListener('click', () => {
+        deleteCookie('authUid');
+        deleteCookie('authEmail');
+        deleteCookie('isLoggedIn');
         auth.signOut();
         closeAuthModal();
     });
@@ -564,15 +571,29 @@ async function syncBestScoreFromServer() {
 }
 
 auth.onAuthStateChanged(user => {
-    if (user) {
+    if (user && !user.isAnonymous) {
         authUser = user;
         authUid = user.uid;
+        setCookie('authUid', user.uid, 365);
+        if (user.email) setCookie('authEmail', user.email, 365);
+        if (user.displayName) setCookie('snakeNick', user.displayName, 365);
+        setCookie('isLoggedIn', '1', 365);
+        loadLeaderboard();
+        syncBestScoreFromServer();
+        loadFeedback();
+    } else if (user && user.isAnonymous) {
+        authUser = user;
+        authUid = user.uid;
+        if (!getCookie('authUid')) {
+            setCookie('authUid', user.uid, 365);
+        }
         loadLeaderboard();
         syncBestScoreFromServer();
         loadFeedback();
     } else {
         authUser = null;
         authUid = null;
+        deleteCookie('isLoggedIn');
         if (!skipAnonSignIn) {
             auth.signInAnonymously().catch(() => {});
         }
@@ -719,12 +740,13 @@ async function loadComments(entry) {
 			statsBtn.style.display = 'none';
 			return;
 		}
+		const myUid = authUid || getCookie('authUid') || '';
 		let html = '';
 		let count = 0;
 		snap.forEach(doc => {
 			const d = doc.data();
 			const ct = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
-			const isOwner = authUid && d.uid === authUid;
+			const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
 			html += `<div class="fb-comment" data-cid="${doc.id}">
 				<span class="fb-comment-name">${escapeHtml(d.name || i18n[currentLang].anonymous)}</span>
 				<span class="fb-comment-msg">${escapeHtml(d.message)}</span>
@@ -747,7 +769,7 @@ async function submitComment(entry) {
 	const msg = input.value.trim();
 	if (!msg || msg.length < 1) return;
 	const name = (authUid && savedName && isValidName(savedName)) ? savedName : i18n[currentLang].anonymous;
-	const uid = authUid || '';
+	const uid = authUid || getCookie('authUid') || '';
 	const list = entry.querySelector('.fb-comments-list');
 	const statsBtn = entry.querySelector('.fb-comment-stats');
 
@@ -809,12 +831,15 @@ async function deleteFeedback(docId) {
 	if (!docId) return;
 	const confirmMsg = currentLang === 'ru' ? 'Удалить этот отзыв?' : 'Delete this feedback?';
 	if (!confirm(confirmMsg)) return;
+	const entry = fbList ? fbList.querySelector(`.fb-entry[data-id="${docId}"]`) : null;
+	if (entry) entry.remove();
 	try {
 		await db.collection(Fb_COLLECTION).doc(docId).delete();
 		loadFeedback(true);
 	} catch (e) {
 		console.error('Error deleting feedback:', e);
 		alert(currentLang === 'ru' ? 'Ошибка при удалении: ' + e.message : 'Delete error: ' + e.message);
+		loadFeedback(true);
 	}
 }
 
@@ -893,6 +918,7 @@ async function loadFeedback(silent) {
 			const cached = JSON.parse(localStorage.getItem('fbVotes') || '{}');
 			Object.keys(cached).forEach(id => { if (feedbackIds.includes(id)) userVotes[id] = cached[id]; });
 		} catch (_) {}
+		const myUid = authUid || getCookie('authUid') || '';
 		let html = '';
 		snap.forEach(doc => {
 			const d = doc.data();
@@ -903,8 +929,9 @@ async function loadFeedback(silent) {
 			const dislikes = d.dislikes ?? d.dislikeCount ?? 0;
 			const msg = escapeHtml(d.message);
 			const long = msg.length > 100;
-			html += `<div class="fb-entry" data-id="${id}">
-				<button class="fb-del-btn" title="${i18n[currentLang].deleteBtn || 'Удалить'}">✕</button>
+			const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+			html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
+				${isOwner ? `<button class="fb-del-btn" title="${i18n[currentLang].deleteBtn || 'Удалить'}">✕</button>` : ''}
 				<div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
 				<div class="fb-expand-row">
 					${long ? '<button class="fb-expand">' + i18n[currentLang].fbShowMore + '</button>' : ''}
@@ -1153,9 +1180,11 @@ fbSubmit.addEventListener('click', async () => {
 	fbStatus.textContent = i18n[currentLang].fbSending;
 	fbStatus.style.color = '';
 	try {
+		const currentUid = authUid || getCookie('authUid') || '';
 		await db.collection(Fb_COLLECTION).add({
 			name: name,
 			message: message,
+			uid: currentUid,
 			time: firebase.firestore.FieldValue.serverTimestamp()
 		});
 		// sync nickname

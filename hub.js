@@ -8,6 +8,9 @@ function getCookie(name) {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     return match ? decodeURIComponent(match[2]) : null;
 }
+function deleteCookie(name) {
+    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+}
 
 // === HTML ESCAPING ===
 function escapeHtml(str) {
@@ -367,6 +370,9 @@ if (accNickSave) {
 
 if (authSignOutBtn) {
     authSignOutBtn.addEventListener('click', async () => {
+        deleteCookie('authUid');
+        deleteCookie('authEmail');
+        deleteCookie('isLoggedIn');
         await auth.signOut();
         closeAuthModal();
     });
@@ -376,15 +382,36 @@ auth.onAuthStateChanged(user => {
     if (user && !user.isAnonymous) {
         authUser = user;
         authUid = user.uid;
-        if (authBtn) authBtn.title = user.displayName || user.email || (i18n[currentLang] || i18n.ru).authAccount;
+        setCookie('authUid', user.uid, 365);
+        if (user.email) setCookie('authEmail', user.email, 365);
+        if (user.displayName) setCookie('snakeNick', user.displayName, 365);
+        setCookie('isLoggedIn', '1', 365);
+        if (authBtn) {
+            authBtn.style.color = 'var(--md-sys-color-primary)';
+            authBtn.title = user.displayName || user.email || (i18n[currentLang] || i18n.ru).authAccount;
+        }
         loadHubFeedback(true);
     } else if (user && user.isAnonymous) {
         authUser = user;
         authUid = user.uid;
+        if (!getCookie('authUid')) {
+            setCookie('authUid', user.uid, 365);
+        }
+        if (getCookie('isLoggedIn') !== '1') {
+            if (authBtn) {
+                authBtn.style.color = '';
+                authBtn.title = (i18n[currentLang] || i18n.ru).signInTooltip || 'Sign in';
+            }
+        }
         loadHubFeedback(true);
     } else {
         authUser = null;
         authUid = null;
+        deleteCookie('isLoggedIn');
+        if (authBtn) {
+            authBtn.style.color = '';
+            authBtn.title = (i18n[currentLang] || i18n.ru).signInTooltip || 'Sign in';
+        }
         auth.signInAnonymously().catch(() => {});
         loadHubFeedback(true);
     }
@@ -444,9 +471,11 @@ if (fbSubmit) {
             fbSubmit.disabled = true;
             if (fbStatus) { fbStatus.textContent = t.fbSending; fbStatus.style.color = 'var(--md-sys-color-on-surface)'; }
             // EXACT FIELDS ALLOWED BY FIRESTORE RULES:
+            const currentUid = authUid || getCookie('authUid') || '';
             await db.collection(FEEDBACK_HUB_COLLECTION).add({
                 name: name,
                 message: msg,
+                uid: currentUid,
                 time: firebase.firestore.FieldValue.serverTimestamp(),
                 likes: 0,
                 dislikes: 0,
@@ -487,6 +516,7 @@ async function loadHubFeedback(silent) {
             Object.keys(cached).forEach(id => { if (feedbackIds.includes(id)) userVotes[id] = cached[id]; });
         } catch (_) {}
 
+        const myUid = authUid || getCookie('authUid') || '';
         let html = '';
         snap.forEach(doc => {
             const d = doc.data();
@@ -497,8 +527,9 @@ async function loadHubFeedback(silent) {
             const dislikes = d.dislikes ?? d.dislikeCount ?? 0;
             const msg = escapeHtml(d.message);
             const long = msg.length > 100;
-            html += `<div class="fb-entry" data-id="${id}">
-                <button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>
+            const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+            html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
+                ${isOwner ? `<button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>` : ''}
                 <div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
                 <div class="fb-expand-row">
                     ${long ? '<button class="fb-expand">' + t.fbShowMore + '</button>' : ''}
@@ -625,15 +656,18 @@ async function loadComments(entry) {
             statsBtn.style.display = 'none';
             return;
         }
+        const myUid = authUid || getCookie('authUid') || '';
         let html = '';
         let count = 0;
         snap.forEach(doc => {
             const d = doc.data();
             const ct = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
+            const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
             html += `<div class="fb-comment" data-cid="${doc.id}">
                 <span class="fb-comment-name">${escapeHtml(d.name || t.anonymous)}</span>
                 <span class="fb-comment-msg">${escapeHtml(d.message)}</span>
                 <span class="fb-time">${ct}</span>
+                ${isOwner ? '<button class="fb-comment-del">✕</button>' : ''}
             </div>`;
             count++;
         });
@@ -652,7 +686,7 @@ async function submitComment(entry) {
     if (!msg) return;
     const t = i18n[currentLang] || i18n.ru;
     const name = getCookie('snakeNick') || (authUser && authUser.displayName) || t.anonymous;
-    const uid = authUid || '';
+    const uid = authUid || getCookie('authUid') || '';
     const list = entry.querySelector('.fb-comments-list');
     const statsBtn = entry.querySelector('.fb-comment-stats');
 
@@ -663,6 +697,7 @@ async function submitComment(entry) {
         `<div class="fb-comment fb-comment-pending" data-cid="${tempId}">
             <span class="fb-comment-name">${escapeHtml(name)}</span>
             <span class="fb-comment-msg">${escapeHtml(msg)}</span>
+            ${uid ? '<button class="fb-comment-del">✕</button>' : ''}
         </div>`
     );
     input.value = '';
@@ -690,14 +725,36 @@ async function submitComment(entry) {
     }
 }
 
+async function deleteComment(entry, cid) {
+    if (!cid) return;
+    const docId = entry.dataset.id;
+    const commentEl = entry.querySelector(`[data-cid="${cid}"]`);
+    if (commentEl) commentEl.remove();
+    const statsBtn = entry.querySelector('.fb-comment-stats');
+    const cur = parseInt(statsBtn.dataset.count) || 1;
+    const newCount = Math.max(0, cur - 1);
+    statsBtn.dataset.count = newCount;
+    statsBtn.textContent = formatCommentCount(newCount);
+    if (newCount <= 0) statsBtn.style.display = 'none';
+    try {
+        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).collection('comments').doc(cid).delete();
+        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).update({
+            commentCount: firebase.firestore.FieldValue.increment(-1)
+        });
+    } catch (_) {}
+}
+
 async function deleteFeedback(docId) {
     if (!docId) return;
+    const confirmMsg = currentLang === 'ru' ? 'Удалить этот отзыв?' : 'Delete this feedback?';
+    if (!confirm(confirmMsg)) return;
     const entry = fbList ? fbList.querySelector(`.fb-entry[data-id="${docId}"]`) : null;
     if (entry) entry.remove();
     try {
         await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).delete();
     } catch (e) {
         console.warn('Delete feedback failed', e);
+        alert(currentLang === 'ru' ? 'Ошибка при удалении: ' + e.message : 'Delete error: ' + e.message);
         loadHubFeedback(true);
     }
 }
@@ -706,6 +763,13 @@ async function deleteFeedback(docId) {
 if (fbList) {
     fbList.addEventListener('click', (e) => {
         const t = i18n[currentLang] || i18n.ru;
+        const commentDelBtn = e.target.closest('.fb-comment-del');
+        if (commentDelBtn) {
+            const comment = commentDelBtn.closest('.fb-comment');
+            const entry = comment.closest('.fb-entry');
+            deleteComment(entry, comment.dataset.cid);
+            return;
+        }
         const delBtn = e.target.closest('.fb-del-btn');
         if (delBtn) {
             const entry = delBtn.closest('.fb-entry');

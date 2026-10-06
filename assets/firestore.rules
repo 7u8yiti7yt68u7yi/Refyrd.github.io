@@ -2,15 +2,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Leaderboard
+    match /leaderboard/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == userId;
+    }
+
+    // Users profile & nickname cooldown
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == userId;
+    }
+
     // Feedback entries (Snake)
     match /feedback/{id} {
       allow read: if true;
       allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['message', 'name', 'time', 'likes', 'dislikes', 'commentCount']);
+        && request.resource.data.keys().hasOnly(['message', 'name', 'time', 'likes', 'dislikes', 'commentCount', 'uid']);
       allow update: if request.auth != null
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['likes', 'dislikes', 'commentCount']);
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null
+        && (
+          !resource.data.keys().hasAny(['uid'])
+          || resource.data.uid == request.auth.uid
+        );
 
       // Votes subcollection
       match /votes/{voteKey} {
@@ -29,7 +47,10 @@ service cloud.firestore {
           && resource.data.uid == request.auth.uid
           && request.resource.data.keys().hasOnly(['message']);
         allow delete: if request.auth != null
-          && resource.data.uid == request.auth.uid;
+          && (
+            !resource.data.keys().hasAny(['uid'])
+            || resource.data.uid == request.auth.uid
+          );
       }
     }
 
@@ -37,11 +58,15 @@ service cloud.firestore {
     match /feedback_hub/{id} {
       allow read: if true;
       allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['message', 'name', 'time', 'likes', 'dislikes', 'commentCount']);
+        && request.resource.data.keys().hasOnly(['message', 'name', 'time', 'likes', 'dislikes', 'commentCount', 'uid']);
       allow update: if request.auth != null
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['likes', 'dislikes', 'commentCount']);
-      allow delete: if request.auth != null;
+      allow delete: if request.auth != null
+        && (
+          !resource.data.keys().hasAny(['uid'])
+          || resource.data.uid == request.auth.uid
+        );
 
       // Votes subcollection
       match /votes/{voteKey} {
@@ -59,7 +84,10 @@ service cloud.firestore {
           && resource.data.uid == request.auth.uid
           && request.resource.data.keys().hasOnly(['message']);
         allow delete: if request.auth != null
-          && resource.data.uid == request.auth.uid;
+          && (
+            !resource.data.keys().hasAny(['uid'])
+            || resource.data.uid == request.auth.uid
+          );
       }
     }
 
