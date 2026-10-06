@@ -9,29 +9,8 @@ function getCookie(name) {
     return match ? decodeURIComponent(match[2]) : null;
 }
 
-// === ЛОКАЛИЗАЦИЯ ===
-const i18n = {
-    en: { scoreTitle: "SCORE", mainTitle: "SNAKE", bestScore: "Best score: ", lastScore: "Last score: ", placeholder: "Your nickname", playBtn: "Play", gameOverTitle: "Game Over", finalScoreText: "Score: ", restartBtn: "Restart", menuBtn: "Menu", lbTitle: "LEADERBOARD", devTitle: "DEV", devConfetti: "Confetti", devGlow: "Glow", devAddScore: "+10 Score", devFill: "Fill Snake", devClose: "Close", lbNoScores: "No scores yet", lbLoading: "Loading...", lbOffline: "Offline", lbShowAll: "Show all", lbShowTop: "Show top 10", fbTitle: "FEEDBACK", fbWriteBtn: "Write feedback", fbOverlayTitle: "Write feedback", fbNamePlaceholder: "Your name", fbMsgPlaceholder: "Write your thoughts about the game...", fbSubmitBtn: "Send", fbLoadFail: "Failed to load feedback", fbNoFeedback: "No feedback yet. Be the first!", fbNameRequired: "Enter your name", fbMsgShort: "Message too short (min 3 chars)", fbSending: "Sending...", fbSent: "Feedback sent! Thanks!", fbShowMore: "Show more", fbShowLess: "Show less", fbComments: "Comments", fbNoComments: "No comments yet", fbWriteComment: "Write a comment...", fbSendComment: "Send", fbReply: "Reply", authSignIn: "Sign In", authEmailBtn: "Sign in with Email", authGoogleBtn: "Sign in with Google", authGithubBtn: "Sign in with GitHub", authEmailTitle: "Email", authEmailSignIn: "Sign In", authEmailRegister: "Register", authSignOut: "Sign Out", authAccount: "Account", authLinkedProviders: "Linked providers", authLinkAnother: "Link another", authNickname: "Nickname", authSave: "Save", authLinkEmail: "Link Email", authLinkEmailBtn: "Link", authEmailPlaceholder: "Email", authPassPlaceholder: "Password", authNickPlaceholder: "Nickname",
-        anonymous: "Anonymous", online: "Online", connecting: "Connecting...", errorPrefix: "Error: ", or: "or", back: "Back", devMode: "DEV MODE",
-        providerGoogle: "Google", providerGithub: "GitHub", providerEmail: "Email", providerEmailPassword: "Email+Password",
-        loggedIn: "Logged in", notLoggedIn: "Not logged in", linked: " linked!", alreadyLinked: "This account is already linked to another user.",
-        fillEmailPass: "Fill in email and password", passMin6: "Password must be at least 6 characters", linking: "Linking...",
-        emailLinked: "Email linked!", emailLinkedSuccess: "Email linked successfully!", emailAlreadyLinked: "This email is already linked to another user.",
-        fillAllFields: "Fill in all fields", signingIn: "Signing in...", creatingAccount: "Creating account...",
-        invalidNickname: "Invalid nickname", cantChangeUntil: "Can't change until ",
-        accountExists: "Email already registered. Sign in with ", accountExistsFallback: "An account with this email already exists. Try a different sign-in method.",
-        signInTooltip: "Sign in", nicknamePlaceholder: "Nickname", pageTitle: "RefyrdSnake", fbReplyOne: "reply", fbReplyFew: "replies", githubLink: "GitHub" },
-    ru: { scoreTitle: "СЧЕТ", mainTitle: "ЗМЕЙКА", bestScore: "Лучший счет: ", lastScore: "Последний счет: ", placeholder: "Твой никнейм", playBtn: "Играть", gameOverTitle: "Конец игры", finalScoreText: "Счет: ", restartBtn: "Начать заново", menuBtn: "В меню", lbTitle: "ТАБЛИЦА", devTitle: "ДЕВ", devConfetti: "Конфетти", devGlow: "Свечение", devAddScore: "+10 очков", devFill: "Длинная змейка", devClose: "Закрыть", lbNoScores: "Пока нет результатов", lbLoading: "Загрузка...", lbOffline: "Офлайн", lbShowAll: "Все", lbShowTop: "Топ 10", fbTitle: "ОТЗЫВЫ", fbWriteBtn: "Написать отзыв", fbOverlayTitle: "Написать отзыв", fbNamePlaceholder: "Ваше имя", fbMsgPlaceholder: "Напишите, что вы думаете об игре...", fbSubmitBtn: "Отправить", fbLoadFail: "Не удалось загрузить отзывы", fbNoFeedback: "Пока нет отзывов. Будьте первым!", fbNameRequired: "Введите имя", fbMsgShort: "Слишком короткое сообщение (мин. 3 символа)", fbSending: "Отправка...", fbSent: "Отзыв отправлен! Спасибо!", fbShowMore: "Развернуть", fbShowLess: "Свернуть", fbComments: "Комментарии", fbNoComments: "Пока нет комментариев", fbWriteComment: "Напишите комментарий...", fbSendComment: "Отправить", fbReply: "Ответить", authSignIn: "Войти", authEmailBtn: "Войти через Email", authGoogleBtn: "Войти через Google", authGithubBtn: "Войти через GitHub", authEmailTitle: "Email", authEmailSignIn: "Войти", authEmailRegister: "Регистрация", authSignOut: "Выйти", authAccount: "Аккаунт", authLinkedProviders: "Привязанные провайдеры", authLinkAnother: "Привязать другой", authNickname: "Никнейм", authSave: "Сохранить", authLinkEmail: "Привязать Email", authLinkEmailBtn: "Привязать", authEmailPlaceholder: "Эл. почта", authPassPlaceholder: "Пароль", authNickPlaceholder: "Никнейм",
-        anonymous: "Аноним", online: "Онлайн", connecting: "Подключение...", errorPrefix: "Ошибка: ", or: "или", back: "Назад", devMode: "ДЕВ РЕЖИМ",
-        providerGoogle: "Google", providerGithub: "GitHub", providerEmail: "Email", providerEmailPassword: "Email+Пароль",
-        loggedIn: "Вошли", notLoggedIn: "Не вошли", linked: " привязан!", alreadyLinked: "Этот аккаунт уже привязан к другому пользователю.",
-        fillEmailPass: "Заполните email и пароль", passMin6: "Пароль должен быть минимум 6 символов", linking: "Привязка...",
-        emailLinked: "Email привязан!", emailLinkedSuccess: "Email успешно привязан!", emailAlreadyLinked: "Этот email уже привязан к другому пользователю.",
-        fillAllFields: "Заполните все поля", signingIn: "Вход...", creatingAccount: "Создание аккаунта...",
-        invalidNickname: "Недопустимый никнейм", cantChangeUntil: "Нельзя сменить до ",
-        accountExists: "Email уже зарегистрирован. Войдите через ", accountExistsFallback: "Аккаунт с таким email уже существует. Попробуйте другой способ входа.",
-        signInTooltip: "Войти", nicknamePlaceholder: "Никнейм", pageTitle: "RefyrdSnake", fbReplyOne: "ответ", fbReplyFew: "ответов", githubLink: "GitHub" }
-};
+// === ЛОКАЛИЗАЦИЯ (см. i18n.js) ===
+
 
 let currentLang = 'en';
 
@@ -155,12 +134,10 @@ if (cookieTheme === 'dark' || cookieTheme === 'light') {
 }
 
 function getResolvedColor(cssVarName) {
-    const temp = document.createElement('div');
-    temp.style.color = cssVarName;
-    document.body.appendChild(temp);
-    const color = getComputedStyle(temp).color;
-    temp.remove();
-    return color;
+    const varName = cssVarName.startsWith('var(')
+        ? cssVarName.slice(4, -1).trim()
+        : cssVarName;
+    return getComputedStyle(document.body).getPropertyValue(varName).trim() || cssVarName;
 }
 
 function applyTheme() {
@@ -227,6 +204,22 @@ sizeBtns.forEach(btn => {
         gridSize = canvas.width / tileCount;
     });
 });
+
+// === КАРКАС МИНИ-ИГР (Game Hub Registry) ===
+const GameHub = {
+    activeGame: 'snake',
+    games: new Map([
+        ['snake', { id: 'snake', title: 'RefyrdSnake' }]
+    ]),
+    register(id, config) {
+        this.games.set(id, config);
+    },
+    switchGame(id) {
+        if (!this.games.has(id)) return;
+        this.activeGame = id;
+    }
+};
+window.GameHub = GameHub;
 
 // === FIREBASE LEADERBOARD ===
 const firebaseConfig = {

@@ -1,23 +1,53 @@
 :root {
+    /* Color tokens (M3 Expressive) */
     --md-sys-color-surface: #fdfdf5;
     --md-sys-color-on-surface: #1a1c18;
     --md-sys-color-surface-container: #f0f0f0;
+    --md-sys-color-surface-container-high: #e8e8e8;
     --md-sys-color-game-board: #ecece4; 
     --md-sys-color-error: #ba1a1a;
+    --md-sys-color-outline: rgba(0, 0, 0, 0.12);
+    --md-sys-color-outline-variant: rgba(0, 0, 0, 0.08);
 
-    --elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
-    --elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+    /* Elevation tokens (M3) */
+    --md-sys-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+    --md-sys-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+    --md-sys-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+    --elevation-2: var(--md-sys-elevation-2);
+    --elevation-3: var(--md-sys-elevation-3);
+
+    /* Shape tokens (M3 Expressive) */
+    --md-sys-shape-corner-none: 0px;
+    --md-sys-shape-corner-extra-small: 4px;
+    --md-sys-shape-corner-small: 8px;
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-shape-corner-large: 16px;
+    --md-sys-shape-corner-extra-large: 28px;
+    --md-sys-shape-corner-full: 9999px;
+
+    /* Motion tokens (M3 Expressive) */
+    --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0, 1.0);
+    --md-sys-motion-easing-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
+    --md-sys-motion-duration-short: 150ms;
+    --md-sys-motion-duration-medium: 300ms;
+    --md-sys-motion-duration-long: 500ms;
 }
 
 [data-theme="dark"] {
     --md-sys-color-surface: #0f0f0f;
     --md-sys-color-on-surface: #e3e3e3;
     --md-sys-color-surface-container: #1e1e1e;
+    --md-sys-color-surface-container-high: #2a2a2a;
     --md-sys-color-game-board: #161616; 
     --md-sys-color-error: #ffb4ab;
+    --md-sys-color-outline: rgba(255, 255, 255, 0.12);
+    --md-sys-color-outline-variant: rgba(255, 255, 255, 0.08);
 
-    --elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.4), 0px 1px 2px 0px rgba(0, 0, 0, 0.5);
-    --elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.5), 0px 4px 8px 3px rgba(0, 0, 0, 0.4);
+    --md-sys-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.3), 0px 1px 2px 0px rgba(0, 0, 0, 0.4);
+    --md-sys-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.4), 0px 1px 2px 0px rgba(0, 0, 0, 0.5);
+    --md-sys-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.5), 0px 4px 8px 3px rgba(0, 0, 0, 0.4);
+    --elevation-2: var(--md-sys-elevation-2);
+    --elevation-3: var(--md-sys-elevation-3);
 }
 
 [data-theme="light"][data-color="green"] { --md-sys-color-primary: #386a20; --md-sys-color-primary-container: #b7f397; --md-sys-color-surface-container: #eef3ec; }
