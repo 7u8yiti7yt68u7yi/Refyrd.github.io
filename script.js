@@ -947,27 +947,28 @@ function setLbStatus(state, msg) {
 }
 
 let lastScoreSaveTime = 0;
-async function saveScoreToLeaderboard() {
+async function saveScoreToLeaderboard(force = false) {
     const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
-    if (score <= 0 || !currentUid) return;
+    const intScore = Math.floor(score);
+    if (intScore <= 0 || !currentUid) return;
     const maxPossible = tileCount * tileCount;
-    if (score > maxPossible || score > 50000) return;
+    if (intScore > maxPossible || intScore > 50000) return;
     const now = Date.now();
-    if (now - lastScoreSaveTime < 2000) return;
+    if (!force && (now - lastScoreSaveTime < 2000)) return;
     lastScoreSaveTime = now;
     const displayName = savedName && savedName !== 'Refyrd.dev' ? savedName : i18n[currentLang].anonymous;
     try {
         const docRef = db.collection(LEADERBOARD_COLLECTION).doc(currentUid);
         const existing = await docRef.get();
 
-        const existingScore = existing.exists ? (existing.data().score || 0) : 0;
+        const existingScore = existing.exists ? (parseInt(existing.data().score, 10) || 0) : 0;
         const existingName = existing.exists ? (existing.data().name || '') : '';
 
-        if (score <= existingScore && displayName === existingName) {
+        if (intScore <= existingScore && displayName === existingName) {
             return;
         }
 
-        const newBest = Math.max(score, existingScore);
+        const newBest = Math.max(intScore, existingScore);
         await docRef.set({
             name: displayName,
             score: newBest
@@ -1005,7 +1006,7 @@ async function loadLeaderboard() {
             html += `<div class="lb-entry">
                 <span class="lb-rank">${medal || rank}</span>
                 <span class="lb-name">${escapeHtml(d.name && d.name.trim() ? d.name : i18n[currentLang].anonymous)}</span>
-                <span class="lb-score">${d.score || 0}</span>
+                <span class="lb-score">${(parseInt(d.score, 10) || 0)}</span>
             </div>`;
             rank++;
         });
@@ -1055,12 +1056,12 @@ lbShowMore.addEventListener('click', () => {
 
 setInterval(() => {
     if (document.visibilityState === 'visible') loadLeaderboard();
-}, 4000);
+}, 3000);
 
 setInterval(() => {
     const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
     if (isRunning && currentUid && score > 0) saveScoreToLeaderboard();
-}, 4000);
+}, 3000);
 
 // === FEEDBACK PANEL ===
 const Fb_COLLECTION = 'feedback';
@@ -1959,7 +1960,7 @@ function handleGameOver() {
     }
     document.getElementById('finalScore').innerText = score;
     gameOverScreen.classList.add('active');
-    saveScoreToLeaderboard();
+    saveScoreToLeaderboard(true);
     document.body.classList.remove('gameplay');
 }
 

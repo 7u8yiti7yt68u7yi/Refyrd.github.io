@@ -355,14 +355,14 @@ function gameOver() {
         triggerVictoryParticles();
     }
     const finalScore = document.getElementById('finalScore');
-    if (finalScore) finalScore.textContent = score.toLocaleString();
+    if (finalScore) finalScore.textContent = Math.floor(score).toLocaleString();
     const finalGraze = document.getElementById('finalGraze');
-    if (finalGraze) finalGraze.textContent = graze.toLocaleString();
+    if (finalGraze) finalGraze.textContent = Math.floor(graze).toLocaleString();
     const finalTime = document.getElementById('finalTime');
     if (finalTime) finalTime.textContent = Math.floor(gameTime) + 's';
 
     document.getElementById('gameOverScreen').classList.add('active');
-    if (typeof saveScoreToLeaderboard === 'function') saveScoreToLeaderboard();
+    if (typeof saveScoreToLeaderboard === 'function') saveScoreToLeaderboard(true);
 }
 
 function togglePause() {
@@ -477,13 +477,14 @@ function spawnRandomEnemy(tier) {
 
     if (typeRoll < 0.55) {
         // Fairy (Standard scout)
+        const fairyHp = Math.round(20 + tier * 5);
         enemies.push({
             type: 'fairy',
             x: startX,
             y: -20,
             targetY: Math.random() * 120 + 50,
-            hp: 20 + tier * 5,
-            maxHp: 20 + tier * 5,
+            hp: fairyHp,
+            maxHp: fairyHp,
             w: 22,
             h: 22,
             timer: 0,
@@ -492,13 +493,14 @@ function spawnRandomEnemy(tier) {
         });
     } else if (typeRoll < 0.85) {
         // Yin-Yang Orb (Medium heavy)
+        const yinyangHp = Math.round(60 + tier * 15);
         enemies.push({
             type: 'yinyang',
             x: startX,
             y: -24,
             targetY: Math.random() * 140 + 70,
-            hp: 60 + tier * 15,
-            maxHp: 60 + tier * 15,
+            hp: yinyangHp,
+            maxHp: yinyangHp,
             w: 26,
             h: 26,
             timer: 0,
@@ -507,14 +509,15 @@ function spawnRandomEnemy(tier) {
         });
     } else {
         // Phantom Star (Fast sweeper)
+        const phantomHp = Math.round(35 + tier * 8);
         enemies.push({
             type: 'phantom',
             x: side === 1 ? -20 : GAME_WIDTH + 20,
             y: Math.random() * 100 + 40,
             vx: side * (1.8 + tier * 0.2),
             vy: 0.6,
-            hp: 35 + tier * 8,
-            maxHp: 35 + tier * 8,
+            hp: phantomHp,
+            maxHp: phantomHp,
             w: 20,
             h: 20,
             timer: 0,
@@ -681,7 +684,7 @@ function update(dt) {
                 if (e.hp <= 0) {
                     playSfx('explode');
                     createSparkle(e.x, e.y, '#FFD700', 14);
-                    score += e.maxHp * 15;
+                    score += Math.round(e.maxHp * 15);
                     updateScoreDisplay();
                     enemies.splice(j, 1);
                 }
@@ -2243,12 +2246,31 @@ if (auth) {
         }
         updateAuthUI();
         updateNicknameInputVisibility();
+        syncBestScoreFromServer();
         loadLeaderboard();
         loadFeedback(true);
     });
 }
 
 // === LEADERBOARD SYSTEM (DANMAKU_LEADERBOARD) ===
+async function syncBestScoreFromServer() {
+    const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
+    if (!currentUid || !db) return;
+    try {
+        const doc = await db.collection(LEADERBOARD_COLLECTION).doc(currentUid).get();
+        if (doc.exists) {
+            const serverScore = parseInt(doc.data().score, 10) || 0;
+            if (serverScore > highScore) {
+                highScore = serverScore;
+                localStorage.setItem('danmakuHighScore', highScore);
+                const t = i18n[currentLang] || i18n.ru;
+                const menuHigh = document.getElementById('menuHighScoreText');
+                if (menuHigh) menuHigh.innerText = t.bestScore + highScore.toLocaleString();
+            }
+        }
+    } catch (e) { /* ignore */ }
+}
+
 async function syncGuestScoreToUser(targetUid) {
     if (!targetUid || !db) return;
     const localBest = parseInt(localStorage.getItem('danmakuHighScore') || '0', 10);
@@ -2260,17 +2282,20 @@ async function syncGuestScoreToUser(targetUid) {
             if (guestDoc.exists) guestScore = guestDoc.data().score || 0;
         } catch (_) {}
     }
-    const finalScore = Math.max(localBest, guestScore, score);
+    const finalScore = Math.floor(Math.max(localBest, guestScore, score));
     if (finalScore > 0) {
         try {
             const userLbRef = db.collection(LEADERBOARD_COLLECTION).doc(targetUid);
             const userLbDoc = await userLbRef.get();
-            const curScore = userLbDoc.exists ? (userLbDoc.data().score || 0) : 0;
+            const curScore = userLbDoc.exists ? (parseInt(userLbDoc.data().score, 10) || 0) : 0;
             const myNick = savedName || getCookie('snakeNick') || authUser?.displayName || (i18n[currentLang] || i18n.ru).anonymous;
             if (finalScore > curScore) {
                 await userLbRef.set({ name: myNick, score: finalScore }, { merge: true });
                 highScore = finalScore;
                 localStorage.setItem('danmakuHighScore', highScore);
+                const t = i18n[currentLang] || i18n.ru;
+                const menuHigh = document.getElementById('menuHighScoreText');
+                if (menuHigh) menuHigh.innerText = t.bestScore + highScore.toLocaleString();
             }
         } catch (e) {
             console.warn('Sync score error:', e);
@@ -2279,26 +2304,27 @@ async function syncGuestScoreToUser(targetUid) {
 }
 
 let lastScoreSaveTime = 0;
-async function saveScoreToLeaderboard() {
+async function saveScoreToLeaderboard(force = false) {
     const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
-    if (score <= 0 || !currentUid || !db) return;
-    if (score > 10000000) return;
+    const intScore = Math.floor(score);
+    if (intScore <= 0 || !currentUid || !db) return;
+    if (intScore > 10000000) return;
     const now = Date.now();
-    if (now - lastScoreSaveTime < 2000) return;
+    if (!force && (now - lastScoreSaveTime < 2000)) return;
     lastScoreSaveTime = now;
     const t = i18n[currentLang] || i18n.ru;
     const displayName = savedName && (typeof isValidName !== 'function' || isValidName(savedName)) ? savedName : t.anonymous;
     try {
         const docRef = db.collection(LEADERBOARD_COLLECTION).doc(currentUid);
         const existing = await docRef.get();
-        const existingScore = existing.exists ? (existing.data().score || 0) : 0;
+        const existingScore = existing.exists ? (parseInt(existing.data().score, 10) || 0) : 0;
         const existingName = existing.exists ? (existing.data().name || '') : '';
 
-        if (score <= existingScore && displayName === existingName) {
+        if (intScore <= existingScore && displayName === existingName) {
             return;
         }
 
-        const newBest = Math.max(score, existingScore);
+        const newBest = Math.max(intScore, existingScore);
         await docRef.set({
             name: displayName,
             score: newBest
@@ -2343,7 +2369,7 @@ async function loadLeaderboard() {
             html += `<div class="lb-entry">
                 <span class="lb-rank">${medal || rank}</span>
                 <span class="lb-name">${escapeHtml(d.name && d.name.trim() ? d.name : t.anonymous)}</span>
-                <span class="lb-score">${(d.score || 0).toLocaleString()}</span>
+                <span class="lb-score">${(parseInt(d.score, 10) || 0).toLocaleString()}</span>
             </div>`;
             rank++;
         });
@@ -2382,12 +2408,12 @@ if (lbShowMore) {
 
 setInterval(() => {
     if (document.visibilityState === 'visible') loadLeaderboard();
-}, 4000);
+}, 3000);
 
 setInterval(() => {
     const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
     if (gameState === 'playing' && currentUid && score > 0) saveScoreToLeaderboard();
-}, 4000);
+}, 3000);
 
 // === FEEDBACK SYSTEM (DANMAKU_FEEDBACK) ===
 const fbList = document.getElementById('feedbackList');

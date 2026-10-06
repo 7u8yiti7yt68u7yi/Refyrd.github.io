@@ -10,7 +10,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['name', 'score'])
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 30
-        && request.resource.data.score is int
+        && (request.resource.data.score is int || request.resource.data.score is number)
         && request.resource.data.score >= 0
         && request.resource.data.score <= 100000;
       allow delete: if request.auth != null
@@ -25,7 +25,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['name', 'score'])
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 30
-        && request.resource.data.score is int
+        && (request.resource.data.score is int || request.resource.data.score is number)
         && request.resource.data.score >= 0
         && request.resource.data.score <= 10000000;
       allow delete: if request.auth != null
