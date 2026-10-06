@@ -12,7 +12,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Google+Sans+Flex:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
+    <script>
+        (function() {
+            var match = document.cookie.match(/(^| )snakeTheme=([^;]+)/);
+            var theme = match ? decodeURIComponent(match[2]) : null;
+            if (!theme) {
+                theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 </head>
 <body data-color="neutral">
 
@@ -28,9 +38,13 @@
         </div>
         <a href="https://github.com/Refyrd/Refyrd.github.io" target="_blank" class="header-github">GitHub</a>
         <div class="header-actions">
-            <button class="icon-btn" id="authBtn" title="Войти">👤</button>
+            <button class="icon-btn" id="authBtn" title="Войти">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </button>
             <button class="icon-btn" id="langToggle">RU</button>
-            <button class="icon-btn" id="themeToggle">☀️</button>
+            <button class="icon-btn" id="themeToggle" title="Тема">
+                <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </button>
         </div>
     </div>
 
@@ -75,7 +89,15 @@
             </div>
         </div>
 
-        <button class="btn-secondary" id="fbWriteBtn" style="margin-top: 10px; width: 100%; max-width: 240px; height: 42px;">Написать отзыв</button>
+        <section class="hub-feedback-section">
+            <div class="hub-feedback-header">
+                <span class="hub-feedback-title" id="uiFbHubTitle">ОТЗЫВЫ СООБЩЕСТВА</span>
+                <button class="btn-primary" id="fbWriteBtn" style="height: 36px; padding: 0 16px; font-size: 13px; width: auto;">Написать отзыв</button>
+            </div>
+            <div class="feedback-list" id="fbList">
+                <div class="lb-loading">Загрузка отзывов...</div>
+            </div>
+        </section>
     </main>
 
     <div class="auth-overlay" id="fbOverlay">
@@ -108,6 +130,37 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="cookie-banner" id="cookieBanner" style="display: none;">
+        <div class="cookie-title" id="uiCookieTitle">Мы используем файлы cookie</div>
+        <div class="cookie-desc" id="uiCookieDesc">Мы используем cookie для сохранения вашей темы, настроек оформления и игрового прогресса.</div>
+        <div class="cookie-actions">
+            <button class="btn-secondary cookie-btn" id="cookieSettingsBtn">Настроить</button>
+            <button class="btn-primary cookie-btn" id="cookieAcceptBtn">Одобрить</button>
+        </div>
+    </div>
+
+    <div class="auth-overlay" id="cookieModal">
+        <div class="auth-modal">
+            <button class="auth-close" id="cookieModalClose">&times;</button>
+            <div class="auth-title" id="uiCookieModalTitle">Настройки Cookie</div>
+            <div class="cookie-setting-item">
+                <div class="cookie-setting-text">
+                    <span class="cookie-setting-name" id="uiCookieEssentialName">Необходимые (Тема, Язык)</span>
+                    <span class="cookie-setting-hint" id="uiCookieEssentialHint">Нужны для запоминания темы и интерфейса</span>
+                </div>
+                <input type="checkbox" class="m3-switch" checked disabled>
+            </div>
+            <div class="cookie-setting-item">
+                <div class="cookie-setting-text">
+                    <span class="cookie-setting-name" id="uiCookieScoresName">Сохранение рекордов и никнейма</span>
+                    <span class="cookie-setting-hint" id="uiCookieScoresHint">Хранит ваш игровой прогресс</span>
+                </div>
+                <input type="checkbox" class="m3-switch" id="cookieScoresPref" checked>
+            </div>
+            <button class="btn-primary" id="cookieSaveBtn" style="margin-top: 8px;">Сохранить</button>
         </div>
     </div>
 

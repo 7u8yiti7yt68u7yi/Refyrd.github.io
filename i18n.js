@@ -109,7 +109,18 @@ const i18n = {
         badgeClassic: "Classic",
         badgeSoon: "In dev",
         badgePlanned: "Planned",
-        badgePlayable: "Play"
+        badgePlayable: "Play",
+        fbHubTitle: "COMMUNITY FEEDBACK",
+        cookieTitle: "Cookie Preferences",
+        cookieDesc: "We use cookies to save your theme, language preferences and high scores.",
+        cookieAccept: "Accept",
+        cookieSettings: "Settings",
+        cookieModalTitle: "Cookie Settings",
+        cookieEssentialName: "Essential (Theme & Language)",
+        cookieEssentialHint: "Saves selected theme and interface language.",
+        cookieScoresName: "Game Progress & High Scores",
+        cookieScoresHint: "Saves your scores and nickname.",
+        cookieSave: "Save Preferences"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -220,6 +231,17 @@ const i18n = {
         badgeClassic: "Классика",
         badgeSoon: "В разработке",
         badgePlanned: "В планах",
-        badgePlayable: "Играть"
+        badgePlayable: "Играть",
+        fbHubTitle: "ОТЗЫВЫ СООБЩЕСТВА",
+        cookieTitle: "Использование файлов Cookie",
+        cookieDesc: "Мы используем cookie для сохранения ваших настроек оформления (тема, язык) и рекордов.",
+        cookieAccept: "Одобрить",
+        cookieSettings: "Настроить",
+        cookieModalTitle: "Настройки Cookie",
+        cookieEssentialName: "Необходимые (Тема и Язык)",
+        cookieEssentialHint: "Сохраняют выбранную тему и язык интерфейса.",
+        cookieScoresName: "Игровой прогресс и рекорды",
+        cookieScoresHint: "Сохраняют ваши рекорды и никнейм.",
+        cookieSave: "Сохранить выбор"
     }
 };

@@ -105,6 +105,27 @@ function applyLanguage() {
     document.getElementById('accNickInput').placeholder = i18n[currentLang].nicknamePlaceholder;
     document.title = i18n[currentLang].pageTitle;
     document.querySelector('.header-github').textContent = i18n[currentLang].githubLink || 'GitHub';
+
+    const cookieTitle = document.getElementById('uiCookieTitle');
+    if (cookieTitle) cookieTitle.innerText = i18n[currentLang].cookieTitle;
+    const cookieDesc = document.getElementById('uiCookieDesc');
+    if (cookieDesc) cookieDesc.innerText = i18n[currentLang].cookieDesc;
+    const cookieAcceptBtn = document.getElementById('cookieAcceptBtn');
+    if (cookieAcceptBtn) cookieAcceptBtn.innerText = i18n[currentLang].cookieAccept;
+    const cookieSettingsBtn = document.getElementById('cookieSettingsBtn');
+    if (cookieSettingsBtn) cookieSettingsBtn.innerText = i18n[currentLang].cookieSettings;
+    const cookieModalTitle = document.getElementById('uiCookieModalTitle');
+    if (cookieModalTitle) cookieModalTitle.innerText = i18n[currentLang].cookieModalTitle;
+    const cookieEssentialName = document.getElementById('uiCookieEssentialName');
+    if (cookieEssentialName) cookieEssentialName.innerText = i18n[currentLang].cookieEssentialName;
+    const cookieEssentialHint = document.getElementById('uiCookieEssentialHint');
+    if (cookieEssentialHint) cookieEssentialHint.innerText = i18n[currentLang].cookieEssentialHint;
+    const cookieScoresName = document.getElementById('uiCookieScoresName');
+    if (cookieScoresName) cookieScoresName.innerText = i18n[currentLang].cookieScoresName;
+    const cookieScoresHint = document.getElementById('uiCookieScoresHint');
+    if (cookieScoresHint) cookieScoresHint.innerText = i18n[currentLang].cookieScoresHint;
+    const cookieSaveBtn = document.getElementById('cookieSaveBtn');
+    if (cookieSaveBtn) cookieSaveBtn.innerText = i18n[currentLang].cookieSave;
     
     updateHighScoreDisplay();
 }
@@ -140,9 +161,13 @@ function getResolvedColor(cssVarName) {
     return getComputedStyle(document.body).getPropertyValue(varName).trim() || cssVarName;
 }
 
+const sunSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>`;
+const moonSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.3 2a10 10 0 0 0-.19 14 9.92 9.92 0 0 0 7.9 3.99 10.14 10.14 0 0 0 1.9-.18 10 10 0 1 1-9.61-17.81z"/></svg>`;
+
 function applyTheme() {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     body.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    themeToggle.innerText = isDark ? '☀️' : '🌙';
+    themeToggle.innerHTML = isDark ? sunSvg : moonSvg;
 }
 applyTheme();
 
@@ -1727,4 +1752,46 @@ function updateConfetti() {
 
 resetGameState();
 requestAnimationFrame(animationLoop);
+
+// === COOKIE BANNER ===
+function initCookieBanner() {
+    const banner = document.getElementById('cookieBanner');
+    const modal = document.getElementById('cookieModal');
+    if (!banner) return;
+    const consent = getCookie('cookieConsent');
+    if (!consent) {
+        banner.style.display = 'flex';
+    }
+    const acceptBtn = document.getElementById('cookieAcceptBtn');
+    const settingsBtn = document.getElementById('cookieSettingsBtn');
+    const modalClose = document.getElementById('cookieModalClose');
+    const saveBtn = document.getElementById('cookieSaveBtn');
+    const scoresPref = document.getElementById('cookieScoresPref');
+
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', () => {
+            setCookie('cookieConsent', 'all', 365);
+            banner.style.display = 'none';
+        });
+    }
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            if (modal) modal.classList.add('active');
+        });
+    }
+    if (modalClose) {
+        modalClose.addEventListener('click', () => {
+            if (modal) modal.classList.remove('active');
+        });
+    }
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const allowScores = scoresPref ? scoresPref.checked : true;
+            setCookie('cookieConsent', allowScores ? 'all' : 'essential', 365);
+            if (modal) modal.classList.remove('active');
+            banner.style.display = 'none';
+        });
+    }
+}
+initCookieBanner();
 
