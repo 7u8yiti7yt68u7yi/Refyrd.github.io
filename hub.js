@@ -79,12 +79,26 @@ function applyLanguage() {
 
     const authBtn = document.getElementById('authBtn');
     if (authBtn) authBtn.title = t.signInTooltip;
-    const authTitle = document.getElementById('authTitle');
-    if (authTitle) authTitle.innerText = t.authSignIn;
-    const authGoogle = document.getElementById('authGoogle');
-    if (authGoogle && authGoogle.querySelector('span')) authGoogle.querySelector('span').textContent = 'Google';
-    const authGithub = document.getElementById('authGithub');
-    if (authGithub && authGithub.querySelector('span')) authGithub.querySelector('span').textContent = 'GitHub';
+    const authEmail = document.getElementById('authEmail');
+    if (authEmail) authEmail.placeholder = t.authEmailPlaceholder || 'Email';
+    const authPassword = document.getElementById('authPassword');
+    if (authPassword) authPassword.placeholder = t.authPassPlaceholder || 'Password';
+    const authRegNick = document.getElementById('authRegNick');
+    if (authRegNick) authRegNick.placeholder = t.authNickPlaceholder || 'Nickname';
+    const uiAuthDividerText = document.getElementById('uiAuthDividerText');
+    if (uiAuthDividerText) uiAuthDividerText.textContent = t.or || 'or';
+    const authAccountTitle = document.getElementById('authAccountTitle');
+    if (authAccountTitle) authAccountTitle.innerText = t.authAccount || 'Account';
+    const uiAccNickLabel = document.getElementById('uiAccNickLabel');
+    if (uiAccNickLabel) uiAccNickLabel.innerText = t.authNickname || 'Nickname';
+    const accNickInput = document.getElementById('accNickInput');
+    if (accNickInput) accNickInput.placeholder = t.authNickPlaceholder || 'Nickname';
+    const accNickSave = document.getElementById('accNickSave');
+    if (accNickSave) accNickSave.innerText = t.authSave || 'Save';
+    const authSignOutBtn = document.getElementById('authSignOutBtn');
+    if (authSignOutBtn) authSignOutBtn.innerText = t.authSignOut || 'Sign Out';
+
+    setAuthMode(isRegisterMode);
 
     // Cookie banner translations
     const cookieTitle = document.getElementById('uiCookieTitle');
@@ -198,7 +212,7 @@ function initCookieBanner() {
 }
 initCookieBanner();
 
-// === FIREBASE ИНИЦИАЛИЗАЦИЯ (ОТЗЫВЫ И АВТОРИЗАЦИЯ) ===
+// === FIREBASE ИНИЦИАЛИЗАЦИЯ ===
 const firebaseConfig = {
     apiKey: "AIzaSyBj5Nxq05fVgiTiNJNM17R6xrRjBmB7qDI",
     authDomain: "refyrdsite.firebaseapp.com",
@@ -214,15 +228,69 @@ const auth = firebase.auth();
 let authUid = null;
 let authUser = null;
 
-// Auth modal
+// === AUTH MODAL & CONTROLS ===
+let isRegisterMode = false;
 const authOverlay = document.getElementById('authOverlay');
 const authClose = document.getElementById('authClose');
 const authBtn = document.getElementById('authBtn');
+const authMainView = document.getElementById('authMainView');
+const authAccountView = document.getElementById('authAccountView');
+const authTitle = document.getElementById('authTitle');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authRegNick = document.getElementById('authRegNick');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authToggleRegister = document.getElementById('authToggleRegister');
 const authGoogle = document.getElementById('authGoogle');
 const authGithub = document.getElementById('authGithub');
 const authStatus = document.getElementById('authStatus');
 
+const accEmail = document.getElementById('accEmail');
+const accNickInput = document.getElementById('accNickInput');
+const accNickSave = document.getElementById('accNickSave');
+const accNickStatus = document.getElementById('accNickStatus');
+const authSignOutBtn = document.getElementById('authSignOutBtn');
+
+function setAuthMode(register) {
+    isRegisterMode = register;
+    const t = i18n[currentLang] || i18n.ru;
+    if (isRegisterMode) {
+        if (authTitle) authTitle.innerText = t.authRegisterBtn || 'Регистрация';
+        if (authRegNick) authRegNick.style.display = 'block';
+        if (authSubmitBtn) authSubmitBtn.innerText = t.authRegisterBtn || 'Зарегистрироваться';
+        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchSignIn || 'Уже есть аккаунт? Войти';
+    } else {
+        if (authTitle) authTitle.innerText = t.authSignIn || 'Войти';
+        if (authRegNick) authRegNick.style.display = 'none';
+        if (authSubmitBtn) authSubmitBtn.innerText = t.authSignIn || 'Войти';
+        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchRegister || 'Нет аккаунта? Зарегистрироваться';
+    }
+    if (authStatus) authStatus.textContent = '';
+}
+
+if (authToggleRegister) {
+    authToggleRegister.addEventListener('click', () => {
+        setAuthMode(!isRegisterMode);
+    });
+}
+
+function updateAuthViews() {
+    const isLoggedIn = authUser && !authUser.isAnonymous;
+    if (isLoggedIn) {
+        if (authMainView) authMainView.style.display = 'none';
+        if (authAccountView) authAccountView.style.display = 'flex';
+        if (accEmail) accEmail.textContent = authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : '');
+        if (accNickInput) accNickInput.value = getCookie('snakeNick') || authUser.displayName || '';
+        if (accNickStatus) accNickStatus.textContent = '';
+    } else {
+        if (authMainView) authMainView.style.display = 'flex';
+        if (authAccountView) authAccountView.style.display = 'none';
+        setAuthMode(false);
+    }
+}
+
 function openAuthModal() {
+    updateAuthViews();
     if (authOverlay) authOverlay.classList.add('active');
 }
 function closeAuthModal() {
@@ -242,11 +310,77 @@ function handleSocialAuth(provider) {
 if (authGoogle) authGoogle.addEventListener('click', () => handleSocialAuth(new firebase.auth.GoogleAuthProvider()));
 if (authGithub) authGithub.addEventListener('click', () => handleSocialAuth(new firebase.auth.GithubAuthProvider()));
 
+if (authSubmitBtn) {
+    authSubmitBtn.addEventListener('click', async () => {
+        const email = (authEmail?.value || '').trim();
+        const pass = (authPassword?.value || '');
+        const nick = (authRegNick?.value || '').trim();
+        const t = i18n[currentLang] || i18n.ru;
+
+        if (!email || !pass) {
+            if (authStatus) { authStatus.textContent = t.fillAllFields || 'Заполните все поля'; authStatus.style.color = 'var(--md-sys-color-error)'; }
+            return;
+        }
+        if (pass.length < 6) {
+            if (authStatus) { authStatus.textContent = t.passMin6 || 'Пароль минимум 6 символов'; authStatus.style.color = 'var(--md-sys-color-error)'; }
+            return;
+        }
+
+        try {
+            authSubmitBtn.disabled = true;
+            if (authStatus) { authStatus.textContent = (isRegisterMode ? (t.creatingAccount || 'Создание аккаунта...') : (t.signingIn || 'Вход...')); authStatus.style.color = 'var(--md-sys-color-on-surface)'; }
+            
+            if (isRegisterMode) {
+                const cred = await auth.createUserWithEmailAndPassword(email, pass);
+                if (nick) {
+                    setCookie('snakeNick', nick, 365);
+                    await cred.user.updateProfile({ displayName: nick }).catch(() => {});
+                }
+            } else {
+                await auth.signInWithEmailAndPassword(email, pass);
+            }
+            authSubmitBtn.disabled = false;
+            closeAuthModal();
+        } catch (e) {
+            authSubmitBtn.disabled = false;
+            if (authStatus) { authStatus.textContent = e.message; authStatus.style.color = 'var(--md-sys-color-error)'; }
+        }
+    });
+}
+
+if (accNickSave) {
+    accNickSave.addEventListener('click', async () => {
+        const nick = (accNickInput?.value || '').trim();
+        const t = i18n[currentLang] || i18n.ru;
+        if (!nick) return;
+        setCookie('snakeNick', nick, 365);
+        if (authUser) {
+            await authUser.updateProfile({ displayName: nick }).catch(() => {});
+        }
+        if (accNickStatus) {
+            accNickStatus.textContent = t.authSaveSuccess || 'Сохранено!';
+            accNickStatus.style.color = 'var(--md-sys-color-primary)';
+            setTimeout(() => { if (accNickStatus) accNickStatus.textContent = ''; }, 2000);
+        }
+    });
+}
+
+if (authSignOutBtn) {
+    authSignOutBtn.addEventListener('click', async () => {
+        await auth.signOut();
+        closeAuthModal();
+    });
+}
+
 auth.onAuthStateChanged(user => {
-    if (user) {
+    if (user && !user.isAnonymous) {
         authUser = user;
         authUid = user.uid;
         if (authBtn) authBtn.title = user.displayName || user.email || (i18n[currentLang] || i18n.ru).authAccount;
+        loadHubFeedback(true);
+    } else if (user && user.isAnonymous) {
+        authUser = user;
+        authUid = user.uid;
         loadHubFeedback(true);
     } else {
         authUser = null;
@@ -281,7 +415,7 @@ if (fbWriteBtn) {
     fbWriteBtn.addEventListener('click', () => {
         if (fbOverlay) {
             fbOverlay.classList.add('active');
-            if (fbNameInput) fbNameInput.value = getCookie('snakeNick') || '';
+            if (fbNameInput) fbNameInput.value = getCookie('snakeNick') || (authUser && authUser.displayName) || '';
             if (fbStatus) fbStatus.textContent = '';
         }
     });
@@ -309,15 +443,14 @@ if (fbSubmit) {
         try {
             fbSubmit.disabled = true;
             if (fbStatus) { fbStatus.textContent = t.fbSending; fbStatus.style.color = 'var(--md-sys-color-on-surface)'; }
+            // EXACT FIELDS ALLOWED BY FIRESTORE RULES:
             await db.collection(FEEDBACK_HUB_COLLECTION).add({
                 name: name,
                 message: msg,
                 time: firebase.firestore.FieldValue.serverTimestamp(),
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 likes: 0,
                 dislikes: 0,
-                commentCount: 0,
-                uid: authUid || ''
+                commentCount: 0
             });
             setCookie('snakeNick', name, 365);
             if (fbStatus) { fbStatus.textContent = t.fbSent; fbStatus.style.color = 'var(--md-sys-color-primary)'; }

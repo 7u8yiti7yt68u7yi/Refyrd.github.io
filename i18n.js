@@ -120,7 +120,10 @@ const i18n = {
         cookieEssentialHint: "Saves selected theme and interface language.",
         cookieScoresName: "Game Progress & High Scores",
         cookieScoresHint: "Saves your scores and nickname.",
-        cookieSave: "Save Preferences"
+        cookieSave: "Save Preferences",
+        authSwitchRegister: "No account? Register",
+        authSwitchSignIn: "Already have an account? Sign In",
+        authRegisterBtn: "Register"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -242,6 +245,9 @@ const i18n = {
         cookieEssentialHint: "Сохраняют выбранную тему и язык интерфейса.",
         cookieScoresName: "Игровой прогресс и рекорды",
         cookieScoresHint: "Сохраняют ваши рекорды и никнейм.",
-        cookieSave: "Сохранить выбор"
+        cookieSave: "Сохранить выбор",
+        authSwitchRegister: "Нет аккаунта? Зарегистрироваться",
+        authSwitchSignIn: "Уже есть аккаунт? Войти",
+        authRegisterBtn: "Зарегистрироваться"
     }
 };

@@ -39,6 +39,10 @@ function applyLanguage() {
     document.getElementById('uiFinalScoreText').innerText = i18n[currentLang].finalScoreText;
     document.getElementById('uiRestartBtn').innerText = i18n[currentLang].restartBtn;
     document.getElementById('uiMenuBtn').innerText = i18n[currentLang].menuBtn;
+    const snakeToHub = document.getElementById('uiSnakeToHubBtn');
+    if (snakeToHub) snakeToHub.innerText = i18n[currentLang].allGamesBtn;
+    const gameOverToHub = document.getElementById('uiGameOverToHubBtn');
+    if (gameOverToHub) gameOverToHub.innerText = i18n[currentLang].allGamesBtn;
     
     document.querySelector('.leaderboard h3').innerText = i18n[currentLang].lbTitle;
     document.getElementById('uiDevTitle').innerText = i18n[currentLang].devTitle;
