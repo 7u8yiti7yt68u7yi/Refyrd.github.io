@@ -1,6 +1,6 @@
 # Refyrd Games
 
-Браузерная платформа мини-игр и Змейка в стиле Material Design 3 Expressive. Написана на чистом JavaScript и HTML5 Canvas без сторонних фреймворков и сборщиков.
+Браузерная платформа мини-игр в стиле Material Design 3 Expressive. Написана на чистом JavaScript и HTML5 Canvas без сторонних фреймворков и сборщиков.
 
 🎮 **Играть онлайн:** [refyrd.github.io](https://refyrd.github.io)
 
