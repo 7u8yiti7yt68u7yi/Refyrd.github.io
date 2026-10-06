@@ -65,20 +65,30 @@ function applyLanguage() {
     document.getElementById('uiDevAddScore').innerText = i18n[currentLang].devAddScore;
     document.getElementById('uiDevFill').innerText = i18n[currentLang].devFill;
     document.getElementById('uiDevClose').innerText = i18n[currentLang].devClose;
-    if (playerNameInput.disabled) {
-        playerNameInput.placeholder = i18n[currentLang].devMode;
+    const pNameInput = document.getElementById('playerNameInput');
+    if (pNameInput) {
+        pNameInput.placeholder = pNameInput.disabled ? i18n[currentLang].devMode : i18n[currentLang].placeholder;
     }
     
     const lbLoading = document.getElementById('lbLoadingText');
     if (lbLoading) lbLoading.innerText = i18n[currentLang].lbLoading;
-    lbShowMore.innerText = lbShowAll ? i18n[currentLang].lbShowTop : i18n[currentLang].lbShowAll;
+    const lbShowMoreEl = document.getElementById('lbShowMore');
+    if (lbShowMoreEl) {
+        lbShowMoreEl.innerText = (typeof lbShowAll !== 'undefined' && lbShowAll) ? i18n[currentLang].lbShowTop : i18n[currentLang].lbShowAll;
+    }
     
-    document.getElementById('fbTitle').innerText = i18n[currentLang].fbTitle;
-    fbWriteBtn.innerText = i18n[currentLang].fbWriteBtn;
-    document.querySelector('#fbOverlay .auth-title').innerText = i18n[currentLang].fbOverlayTitle;
-    fbNameInput.placeholder = i18n[currentLang].fbNamePlaceholder;
-    fbMessageInput.placeholder = i18n[currentLang].fbMsgPlaceholder;
-    fbSubmit.innerText = i18n[currentLang].fbSubmitBtn;
+    const fbTitleEl = document.getElementById('fbTitle');
+    if (fbTitleEl) fbTitleEl.innerText = i18n[currentLang].fbTitle;
+    const fbWriteBtnEl = document.getElementById('fbWriteBtn');
+    if (fbWriteBtnEl) fbWriteBtnEl.innerText = i18n[currentLang].fbWriteBtn;
+    const fbModalTitle = document.querySelector('#fbOverlay .auth-title');
+    if (fbModalTitle) fbModalTitle.innerText = i18n[currentLang].fbOverlayTitle;
+    const fbNameInputEl = document.getElementById('fbNameInput');
+    if (fbNameInputEl) fbNameInputEl.placeholder = i18n[currentLang].fbNamePlaceholder;
+    const fbMessageInputEl = document.getElementById('fbMessageInput');
+    if (fbMessageInputEl) fbMessageInputEl.placeholder = i18n[currentLang].fbMsgPlaceholder;
+    const fbSubmitEl = document.getElementById('fbSubmit');
+    if (fbSubmitEl) fbSubmitEl.innerText = i18n[currentLang].fbSubmitBtn;
     
     const authTitle = document.getElementById('authTitle');
     if (authTitle) authTitle.innerText = isRegisterMode ? (i18n[currentLang].authRegisterBtn || 'Register') : i18n[currentLang].authSignIn;
@@ -120,9 +130,18 @@ function applyLanguage() {
     const authLinkEmailLink = document.getElementById('authLinkEmailLink');
     if (authLinkEmailLink) authLinkEmailLink.innerText = i18n[currentLang].authLinkEmailBtn || 'Link';
 
-    renderProviders();
+    const uiNickPromptTitle = document.getElementById('uiNickPromptTitle');
+    if (uiNickPromptTitle) uiNickPromptTitle.innerText = i18n[currentLang].nickPromptTitle || 'Your nickname';
+    const uiNickPromptSubtitle = document.getElementById('uiNickPromptSubtitle');
+    if (uiNickPromptSubtitle) uiNickPromptSubtitle.innerText = i18n[currentLang].nickPromptSubtitle || 'Choose a nickname for records and profile';
+    const nickPromptCancel = document.getElementById('nickPromptCancel');
+    if (nickPromptCancel) nickPromptCancel.innerText = i18n[currentLang].skipBtn || 'Skip';
+    const nickPromptSave = document.getElementById('nickPromptSave');
+    if (nickPromptSave) nickPromptSave.innerText = i18n[currentLang].authSave || 'Save';
+
+    if (typeof renderProviders === 'function') renderProviders();
     const authBtnEl = document.getElementById('authBtn');
-    if (authBtnEl) authBtnEl.title = (authUser && !authUser.isAnonymous) ? (authUser.displayName || authUser.email || i18n[currentLang].authAccount) : (i18n[currentLang].signInTooltip || 'Sign in');
+    if (authBtnEl) authBtnEl.title = (typeof authUser !== 'undefined' && authUser && !authUser.isAnonymous) ? (authUser.displayName || authUser.email || i18n[currentLang].authAccount) : (i18n[currentLang].signInTooltip || 'Sign in');
     const lbStatusSpan = document.querySelector('#lbStatus span:last-child');
     if (lbStatusSpan) lbStatusSpan.textContent = i18n[currentLang].online;
     // Update existing DOM elements with new language
@@ -136,11 +155,13 @@ function applyLanguage() {
     });
     document.querySelectorAll('.fb-comment-stats').forEach(el => {
         const n = parseInt(el.dataset.count) || 0;
-        el.textContent = formatCommentCount(n);
+        if (typeof formatCommentCount === 'function') el.textContent = formatCommentCount(n);
     });
-    document.getElementById('accNickInput').placeholder = i18n[currentLang].nicknamePlaceholder;
+    const accNickInputEl = document.getElementById('accNickInput');
+    if (accNickInputEl) accNickInputEl.placeholder = i18n[currentLang].nicknamePlaceholder;
     document.title = i18n[currentLang].pageTitle;
-    document.querySelector('.header-github').textContent = i18n[currentLang].githubLink || 'GitHub';
+    const ghBtn = document.querySelector('.header-github');
+    if (ghBtn) ghBtn.title = i18n[currentLang].githubLink || 'GitHub';
 
     const cookieTitle = document.getElementById('uiCookieTitle');
     if (cookieTitle) cookieTitle.innerText = i18n[currentLang].cookieTitle;
@@ -163,7 +184,7 @@ function applyLanguage() {
     const cookieSaveBtn = document.getElementById('cookieSaveBtn');
     if (cookieSaveBtn) cookieSaveBtn.innerText = i18n[currentLang].cookieSave;
     
-    updateHighScoreDisplay();
+    if (typeof updateHighScoreDisplay === 'function') updateHighScoreDisplay();
 }
 
 langToggle.addEventListener('click', () => {
@@ -238,6 +259,7 @@ colorBtns.forEach(btn => {
             e.stopPropagation();
             setTimeout(() => {
                 palettePopover.classList.remove('active');
+                if (paletteBtn) paletteBtn.classList.remove('active');
             }, 180);
         }
     });
@@ -246,18 +268,22 @@ colorBtns.forEach(btn => {
 if (paletteBtn && palettePopover) {
     paletteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        palettePopover.classList.toggle('active');
+        const willBeActive = !palettePopover.classList.contains('active');
+        palettePopover.classList.toggle('active', willBeActive);
+        paletteBtn.classList.toggle('active', willBeActive);
     });
 
     document.addEventListener('click', (e) => {
         if (!palettePopover.contains(e.target) && e.target !== paletteBtn && !paletteBtn.contains(e.target)) {
             palettePopover.classList.remove('active');
+            paletteBtn.classList.remove('active');
         }
     });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && palettePopover.classList.contains('active')) {
             palettePopover.classList.remove('active');
+            paletteBtn.classList.remove('active');
         }
     });
 }
@@ -356,6 +382,29 @@ function showStatus(el, msg, isError) {
 	el.style.color = isError ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-primary)';
 }
 function clearStatus(el) { if (el) el.textContent = ''; }
+
+function setAuthMode(register) {
+    isRegisterMode = register;
+    const t = i18n[currentLang] || i18n.ru;
+    if (isRegisterMode) {
+        if (authTitle) authTitle.innerText = t.authRegisterBtn || 'Регистрация';
+        if (authRegNick) authRegNick.style.display = 'block';
+        if (authSubmitBtn) authSubmitBtn.innerText = t.authRegisterBtn || 'Зарегистрироваться';
+        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchSignIn || 'Уже есть аккаунт? Войти';
+    } else {
+        if (authTitle) authTitle.innerText = t.authSignIn || 'Войти';
+        if (authRegNick) authRegNick.style.display = 'none';
+        if (authSubmitBtn) authSubmitBtn.innerText = t.authSignIn || 'Войти';
+        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchRegister || 'Нет аккаунта? Зарегистрироваться';
+    }
+    clearStatus(authStatus);
+}
+
+if (authToggleRegister) {
+    authToggleRegister.addEventListener('click', () => {
+        setAuthMode(!isRegisterMode);
+    });
+}
 
 const accProviders = document.getElementById('accProviders');
 const accNickInput = document.getElementById('accNickInput');
@@ -475,7 +524,6 @@ function updateAuthUI() {
     const isLoggedIn = (authUser && !authUser.isAnonymous) || getCookie('isLoggedIn') === '1';
     if (isLoggedIn) {
         if (authBtn) {
-            authBtn.style.color = 'var(--md-sys-color-primary)';
             authBtn.title = (authUser && (authUser.displayName || authUser.email)) || getCookie('snakeNick') || getCookie('authEmail') || (i18n[currentLang] || i18n.ru).authAccount;
         }
         const email = (authUser && (authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : ''))) || getCookie('authEmail') || '';
@@ -488,7 +536,6 @@ function updateAuthUI() {
         loadNicknameFromFirestore();
     } else {
         if (authBtn) {
-            authBtn.style.color = '';
             authBtn.title = (i18n[currentLang] || i18n.ru).signInTooltip || 'Sign in';
         }
         if (authMainView) authMainView.style.display = 'flex';
@@ -500,9 +547,11 @@ function updateAuthUI() {
 function openAuthModal() {
     updateAuthUI();
     if (authOverlay) authOverlay.classList.add('active');
+    if (authBtn) authBtn.classList.add('active');
 }
 function closeAuthModal() {
     if (authOverlay) authOverlay.classList.remove('active');
+    if (authBtn) authBtn.classList.remove('active');
 }
 if (authBtn) authBtn.addEventListener('click', openAuthModal);
 if (authClose) authClose.addEventListener('click', closeAuthModal);
@@ -715,19 +764,79 @@ if (authSubmitBtn) {
 }
 
 // === SOCIAL AUTH ===
+function requestNicknameModal(defaultNick = '') {
+    const overlay = document.getElementById('nickPromptOverlay');
+    const input = document.getElementById('nickPromptInput');
+    const status = document.getElementById('nickPromptStatus');
+    const cancelBtn = document.getElementById('nickPromptCancel');
+    const saveBtn = document.getElementById('nickPromptSave');
+
+    if (!overlay || !input || !saveBtn || !cancelBtn) {
+        return Promise.resolve(defaultNick || '');
+    }
+
+    return new Promise((resolve) => {
+        input.value = defaultNick || '';
+        if (status) status.textContent = '';
+        overlay.classList.add('active');
+        setTimeout(() => input.focus(), 50);
+
+        function cleanup() {
+            overlay.classList.remove('active');
+            saveBtn.removeEventListener('click', onSave);
+            cancelBtn.removeEventListener('click', onCancel);
+            input.removeEventListener('keydown', onKey);
+        }
+
+        function onCancel() {
+            cleanup();
+            resolve(defaultNick || '');
+        }
+
+        function onSave() {
+            const raw = (input.value || '').trim();
+            if (!raw) {
+                cleanup();
+                resolve(defaultNick || '');
+                return;
+            }
+            const clean = typeof sanitizeName === 'function' ? sanitizeName(raw) : raw;
+            if (typeof isValidName === 'function' && !isValidName(clean)) {
+                if (status) {
+                    const t = i18n[currentLang] || i18n.ru;
+                    status.textContent = t.invalidNickname || 'Недопустимый никнейм';
+                    status.style.color = 'var(--md-sys-color-error)';
+                }
+                return;
+            }
+            cleanup();
+            resolve(clean);
+        }
+
+        function onKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                onSave();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                onCancel();
+            }
+        }
+
+        saveBtn.addEventListener('click', onSave);
+        cancelBtn.addEventListener('click', onCancel);
+        input.addEventListener('keydown', onKey);
+    });
+}
+
 async function handleSocialAuth(provider) {
     showStatus(authStatus, (i18n[currentLang] || i18n.ru).signingIn || 'Вход...', false);
     try {
         let nick = sanitizeName(authRegNick?.value || '').trim();
         if (nick && !isValidName(nick)) nick = '';
         if (!nick) {
-            const promptTitle = currentLang === 'ru' ? 'Введите ваш никнейм для профиля:' : 'Enter your profile nickname:';
             const defaultPrompt = savedName || getCookie('snakeNick') || '';
-            const entered = prompt(promptTitle, defaultPrompt);
-            if (entered) {
-                const cleaned = sanitizeName(entered).trim();
-                if (isValidName(cleaned)) nick = cleaned;
-            }
+            nick = await requestNicknameModal(defaultPrompt);
         }
 
         const cred = await upgradeFromAnonymous(() => auth.signInWithPopup(provider));
@@ -736,7 +845,8 @@ async function handleSocialAuth(provider) {
             if (targetNick) {
                 savedName = targetNick;
                 setCookie('snakeNick', targetNick, 365);
-                playerNameInput.value = targetNick;
+                const pInput = document.getElementById('playerNameInput');
+                if (pInput) pInput.value = targetNick;
                 await cred.user.updateProfile({ displayName: targetNick }).catch(() => {});
                 await db.collection('users').doc(cred.user.uid).set({
                     nickname: targetNick,

@@ -58,6 +58,15 @@ function applyLanguage() {
             btn.title = t['color' + cap] || c;
         });
     }
+
+    const uiNickPromptTitle = document.getElementById('uiNickPromptTitle');
+    if (uiNickPromptTitle) uiNickPromptTitle.innerText = t.nickPromptTitle || 'Твой никнейм';
+    const uiNickPromptSubtitle = document.getElementById('uiNickPromptSubtitle');
+    if (uiNickPromptSubtitle) uiNickPromptSubtitle.innerText = t.nickPromptSubtitle || 'Придумай никнейм для рекордов и профиля';
+    const nickPromptCancel = document.getElementById('nickPromptCancel');
+    if (nickPromptCancel) nickPromptCancel.innerText = t.skipBtn || 'Пропустить';
+    const nickPromptSave = document.getElementById('nickPromptSave');
+    if (nickPromptSave) nickPromptSave.innerText = t.authSave || 'Сохранить';
     
     const snakeTitle = document.getElementById('uiGameSnakeTitle');
     if (snakeTitle) snakeTitle.innerText = t.gameSnakeTitle;
@@ -226,7 +235,9 @@ applyColor(currentColor);
 if (paletteBtn && palettePopover) {
     paletteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        palettePopover.classList.toggle('active');
+        const willBeActive = !palettePopover.classList.contains('active');
+        palettePopover.classList.toggle('active', willBeActive);
+        paletteBtn.classList.toggle('active', willBeActive);
     });
 
     palettePopover.querySelectorAll('.color-btn').forEach(btn => {
@@ -236,6 +247,7 @@ if (paletteBtn && palettePopover) {
             applyColor(c);
             setTimeout(() => {
                 palettePopover.classList.remove('active');
+                paletteBtn.classList.remove('active');
             }, 180);
         });
     });
@@ -243,12 +255,14 @@ if (paletteBtn && palettePopover) {
     document.addEventListener('click', (e) => {
         if (!palettePopover.contains(e.target) && e.target !== paletteBtn && !paletteBtn.contains(e.target)) {
             palettePopover.classList.remove('active');
+            paletteBtn.classList.remove('active');
         }
     });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && palettePopover.classList.contains('active')) {
             palettePopover.classList.remove('active');
+            paletteBtn.classList.remove('active');
         }
     });
 }
@@ -534,12 +548,15 @@ function updateAuthViews() {
 function openAuthModal() {
     updateAuthViews();
     if (authOverlay) authOverlay.classList.add('active');
+    if (authBtn) authBtn.classList.add('active');
 }
 function closeAuthModal() {
     if (authOverlay) authOverlay.classList.remove('active');
+    if (authBtn) authBtn.classList.remove('active');
 }
 if (authBtn) authBtn.addEventListener('click', openAuthModal);
 if (authClose) authClose.addEventListener('click', closeAuthModal);
+if (authOverlay) authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuthModal(); });
 
 async function syncGuestScoreToUser(targetUid) {
     if (!targetUid) return;
@@ -570,6 +587,71 @@ async function syncGuestScoreToUser(targetUid) {
     }
 }
 
+function requestNicknameModal(defaultNick = '') {
+    const overlay = document.getElementById('nickPromptOverlay');
+    const input = document.getElementById('nickPromptInput');
+    const status = document.getElementById('nickPromptStatus');
+    const cancelBtn = document.getElementById('nickPromptCancel');
+    const saveBtn = document.getElementById('nickPromptSave');
+
+    if (!overlay || !input || !saveBtn || !cancelBtn) {
+        return Promise.resolve(defaultNick || '');
+    }
+
+    return new Promise((resolve) => {
+        input.value = defaultNick || '';
+        if (status) status.textContent = '';
+        overlay.classList.add('active');
+        setTimeout(() => input.focus(), 50);
+
+        function cleanup() {
+            overlay.classList.remove('active');
+            saveBtn.removeEventListener('click', onSave);
+            cancelBtn.removeEventListener('click', onCancel);
+            input.removeEventListener('keydown', onKey);
+        }
+
+        function onCancel() {
+            cleanup();
+            resolve(defaultNick || '');
+        }
+
+        function onSave() {
+            const raw = (input.value || '').trim();
+            if (!raw) {
+                cleanup();
+                resolve(defaultNick || '');
+                return;
+            }
+            const clean = typeof sanitizeName === 'function' ? sanitizeName(raw) : raw;
+            if (typeof isValidName === 'function' && !isValidName(clean)) {
+                if (status) {
+                    const t = i18n[currentLang] || i18n.ru;
+                    status.textContent = t.invalidNickname || 'Недопустимый никнейм';
+                    status.style.color = 'var(--md-sys-color-error)';
+                }
+                return;
+            }
+            cleanup();
+            resolve(clean);
+        }
+
+        function onKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                onSave();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                onCancel();
+            }
+        }
+
+        saveBtn.addEventListener('click', onSave);
+        cancelBtn.addEventListener('click', onCancel);
+        input.addEventListener('keydown', onKey);
+    });
+}
+
 async function handleSocialAuth(provider) {
     if (authStatus) { authStatus.textContent = ''; }
     try {
@@ -579,13 +661,8 @@ async function handleSocialAuth(provider) {
             if (typeof isValidName === 'function' && !isValidName(nick)) nick = '';
         }
         if (!nick) {
-            const promptTitle = currentLang === 'ru' ? 'Введите ваш никнейм для профиля:' : 'Enter your profile nickname:';
             const defaultPrompt = getCookie('snakeNick') || '';
-            const entered = prompt(promptTitle, defaultPrompt);
-            if (entered) {
-                const cleaned = typeof sanitizeName === 'function' ? sanitizeName(entered) : entered.trim();
-                if (typeof isValidName === 'function' && isValidName(cleaned)) nick = cleaned;
-            }
+            nick = await requestNicknameModal(defaultPrompt);
         }
 
         const cred = await auth.signInWithPopup(provider);
@@ -733,7 +810,6 @@ auth.onAuthStateChanged(user => {
         if (user.displayName) setCookie('snakeNick', user.displayName, 365);
         setCookie('isLoggedIn', '1', 365);
         if (authBtn) {
-            authBtn.style.color = 'var(--md-sys-color-primary)';
             authBtn.title = user.displayName || user.email || (i18n[currentLang] || i18n.ru).authAccount;
         }
         loadHubFeedback(true);

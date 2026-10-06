@@ -131,7 +131,10 @@ const i18n = {
         colorGreen: "Green",
         colorBlue: "Blue",
         colorRed: "Red",
-        colorPurple: "Purple"
+        colorPurple: "Purple",
+        nickPromptTitle: "Your Nickname",
+        nickPromptSubtitle: "Choose a nickname for scores and profile",
+        skipBtn: "Skip"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -264,6 +267,9 @@ const i18n = {
         colorGreen: "Зеленая",
         colorBlue: "Синяя",
         colorRed: "Красная",
-        colorPurple: "Фиолетовая"
+        colorPurple: "Фиолетовая",
+        nickPromptTitle: "Твой никнейм",
+        nickPromptSubtitle: "Придумай никнейм для рекордов и профиля",
+        skipBtn: "Пропустить"
     }
 };
