@@ -2280,7 +2280,8 @@ async function syncGuestScoreToUser(targetUid) {
 
 let lastScoreSaveTime = 0;
 async function saveScoreToLeaderboard() {
-    if (score <= 0 || !authUid || !db) return;
+    const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
+    if (score <= 0 || !currentUid || !db) return;
     if (score > 10000000) return;
     const now = Date.now();
     if (now - lastScoreSaveTime < 2000) return;
@@ -2288,20 +2289,26 @@ async function saveScoreToLeaderboard() {
     const t = i18n[currentLang] || i18n.ru;
     const displayName = savedName && (typeof isValidName !== 'function' || isValidName(savedName)) ? savedName : t.anonymous;
     try {
-        const docRef = db.collection(LEADERBOARD_COLLECTION).doc(authUid);
+        const docRef = db.collection(LEADERBOARD_COLLECTION).doc(currentUid);
         const existing = await docRef.get();
         const existingScore = existing.exists ? (existing.data().score || 0) : 0;
         const existingName = existing.exists ? (existing.data().name || '') : '';
 
         if (score <= existingScore && displayName === existingName) {
-            loadLeaderboard();
             return;
         }
 
+        const newBest = Math.max(score, existingScore);
         await docRef.set({
             name: displayName,
-            score: Math.max(score, existingScore)
+            score: newBest
         }, { merge: true });
+        if (newBest > highScore) {
+            highScore = newBest;
+            localStorage.setItem('danmakuHighScore', highScore);
+            const menuHigh = document.getElementById('menuHighScoreText');
+            if (menuHigh) menuHigh.innerText = t.bestScore + highScore.toLocaleString();
+        }
     } catch (e) {
         console.warn('Firebase save score error:', e);
     }
@@ -2340,7 +2347,9 @@ async function loadLeaderboard() {
             </div>`;
             rank++;
         });
-        leaderboardList.innerHTML = html;
+        if (leaderboardList.innerHTML !== html) {
+            leaderboardList.innerHTML = html;
+        }
     } catch (e) {
         if (currentLang !== _lbLangAtStart) return;
         console.warn('Firebase load lb error:', e);
@@ -2351,7 +2360,10 @@ async function loadLeaderboard() {
 
 function setLbStatus(state, msg) {
     const lbStatus = document.getElementById('lbStatus');
-    if (lbStatus) lbStatus.innerHTML = `<span class="dot ${state}"></span><span>${escapeHtml(msg)}</span>`;
+    if (lbStatus) {
+        const newHtml = `<span class="dot ${state}"></span><span>${escapeHtml(msg)}</span>`;
+        if (lbStatus.innerHTML !== newHtml) lbStatus.innerHTML = newHtml;
+    }
 }
 
 const lbShowMore = document.getElementById('lbShowMore');
@@ -2369,11 +2381,12 @@ if (lbShowMore) {
 }
 
 setInterval(() => {
-    if (authUid && document.visibilityState === 'visible') loadLeaderboard();
-}, 30000);
+    if (document.visibilityState === 'visible') loadLeaderboard();
+}, 4000);
 
 setInterval(() => {
-    if (gameState === 'playing' && authUid && score > 0) saveScoreToLeaderboard();
+    const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
+    if (gameState === 'playing' && currentUid && score > 0) saveScoreToLeaderboard();
 }, 4000);
 
 // === FEEDBACK SYSTEM (DANMAKU_FEEDBACK) ===

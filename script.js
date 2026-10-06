@@ -941,12 +941,15 @@ const leaderboardList = document.getElementById('leaderboardList');
 const lbStatus = document.getElementById('lbStatus');
 
 function setLbStatus(state, msg) {
-    lbStatus.innerHTML = `<span class="dot ${state}"></span><span>${escapeHtml(msg)}</span>`;
+    if (!lbStatus) return;
+    const newHtml = `<span class="dot ${state}"></span><span>${escapeHtml(msg)}</span>`;
+    if (lbStatus.innerHTML !== newHtml) lbStatus.innerHTML = newHtml;
 }
 
 let lastScoreSaveTime = 0;
 async function saveScoreToLeaderboard() {
-    if (score <= 0 || !authUid) return;
+    const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
+    if (score <= 0 || !currentUid) return;
     const maxPossible = tileCount * tileCount;
     if (score > maxPossible || score > 50000) return;
     const now = Date.now();
@@ -954,21 +957,26 @@ async function saveScoreToLeaderboard() {
     lastScoreSaveTime = now;
     const displayName = savedName && savedName !== 'Refyrd.dev' ? savedName : i18n[currentLang].anonymous;
     try {
-        const docRef = db.collection(LEADERBOARD_COLLECTION).doc(authUid);
+        const docRef = db.collection(LEADERBOARD_COLLECTION).doc(currentUid);
         const existing = await docRef.get();
 
         const existingScore = existing.exists ? (existing.data().score || 0) : 0;
         const existingName = existing.exists ? (existing.data().name || '') : '';
 
         if (score <= existingScore && displayName === existingName) {
-            loadLeaderboard();
             return;
         }
 
+        const newBest = Math.max(score, existingScore);
         await docRef.set({
             name: displayName,
-            score: Math.max(score, existingScore)
+            score: newBest
         });
+        if (newBest > bestScore) {
+            bestScore = newBest;
+            localStorage.setItem('snakeHighScore', bestScore);
+            updateHighScoreDisplay();
+        }
     } catch (e) {
         console.warn('Firebase save error:', e);
     }
@@ -1001,7 +1009,9 @@ async function loadLeaderboard() {
             </div>`;
             rank++;
         });
-        leaderboardList.innerHTML = html;
+        if (leaderboardList.innerHTML !== html) {
+            leaderboardList.innerHTML = html;
+        }
         if (!window._lbHeightFixed) {
             const lb = document.getElementById('leaderboard');
             if (lb) {
@@ -1044,12 +1054,13 @@ lbShowMore.addEventListener('click', () => {
 });
 
 setInterval(() => {
-    if (authUid && document.visibilityState === 'visible') loadLeaderboard();
-}, 30000);
+    if (document.visibilityState === 'visible') loadLeaderboard();
+}, 4000);
 
 setInterval(() => {
-    if (isRunning && authUid && score > 0) saveScoreToLeaderboard();
-}, 3000);
+    const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
+    if (isRunning && currentUid && score > 0) saveScoreToLeaderboard();
+}, 4000);
 
 // === FEEDBACK PANEL ===
 const Fb_COLLECTION = 'feedback';
