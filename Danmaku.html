@@ -95,17 +95,9 @@
                 
                 <input type="text" id="playerNameInput" class="name-input" placeholder="Твой никнейм" maxlength="12" autocomplete="off" style="margin: 4px 0 8px;">
 
-                <div class="danmaku-speed-setting" id="speedSettingStart">
-                    <div class="speed-setting-header">
-                        <span id="uiSpeedLabel">Скорость игрока</span>
-                        <span class="speed-val-badge" id="speedValBadgeStart">3.6</span>
-                    </div>
-                    <input type="range" class="danmaku-slider" id="speedSliderStart" min="2.0" max="5.5" step="0.1" value="3.6" aria-label="Скорость игрока">
-                </div>
-
                 <div style="background: var(--md-sys-color-surface-container-high); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 12px 14px; font-size: 12px; line-height: 1.5; text-align: center; color: var(--md-sys-color-on-surface-variant); margin: 4px 0 12px; width: 100%;">
                     <div style="font-weight: 700; color: var(--md-sys-color-primary); margin-bottom: 4px;" id="uiControlsTitle">Управление</div>
-                    <div id="uiControlsTip" style="font-size: 11px; opacity: 0.9;">WASD/Стрелки — движение<br><b>Shift</b> — Точный фокус (хитбокс 3px)<br><b>Z / Пробел</b> — стрельба | <b>X</b> — Бомба</div>
+                    <div id="uiControlsTip" style="font-size: 11px; opacity: 0.9;">WASD/Стрелки — движение | <b>Z / Пробел</b> — стрельба | <b>X</b> — Бомба</div>
                 </div>
 
                 <div class="button-group">
@@ -133,15 +125,6 @@
         <div class="overlay" id="pauseScreen">
             <div class="menu-inner">
                 <div class="menu-title" id="uiPauseTitle">Пауза</div>
-                
-                <div class="danmaku-speed-setting" id="speedSettingPause">
-                    <div class="speed-setting-header">
-                        <span id="uiPauseSpeedLabel">Скорость игрока</span>
-                        <span class="speed-val-badge" id="speedValBadgePause">3.6</span>
-                    </div>
-                    <input type="range" class="danmaku-slider" id="speedSliderPause" min="2.0" max="5.5" step="0.1" value="3.6" aria-label="Скорость игрока">
-                </div>
-
                 <div class="button-group" style="margin-top: 14px;">
                     <button class="btn-primary" id="uiResumeBtn">Продолжить</button>
                     <button class="btn-secondary" id="uiPauseRestartBtn">Заново</button>
@@ -152,7 +135,6 @@
     </div>
 
     <div class="danmaku-touch-bar" id="touchBar">
-        <button class="danmaku-touch-btn" id="touchFocusBtn">Фокус (Shift)</button>
         <button class="danmaku-touch-btn" id="touchBombBtn">Бомба (X)</button>
     </div>
 

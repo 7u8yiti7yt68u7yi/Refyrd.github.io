@@ -117,7 +117,7 @@ const i18n = {
         danmakuTitle: "DANMAKU HELL",
         danmakuGraze: "Graze: ",
         danmakuTime: "Time: ",
-        danmakuControlsTip: "Move: WASD/Arrows | Focus: Shift | Shoot: Z/Space | Bomb: X",
+        danmakuControlsTip: "Move: WASD/Arrows | Shoot: Z/Space | Bomb: X",
         danmakuFocusBtn: "Focus",
         danmakuBombBtn: "Bomb",
         danmakuSpellCard: "SPELL CARD: ",
@@ -150,8 +150,7 @@ const i18n = {
         colorPurple: "Purple",
         nickPromptTitle: "Your Nickname",
         nickPromptSubtitle: "Choose a nickname for scores and profile",
-        skipBtn: "Skip",
-        danmakuPlayerSpeed: "Player speed"
+        skipBtn: "Skip"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -269,7 +268,7 @@ const i18n = {
         danmakuTitle: "ДАНМАКУ ХЕЛЛ",
         danmakuGraze: "Грейз: ",
         danmakuTime: "Время: ",
-        danmakuControlsTip: "Движение: WASD/Стрелки | Фокус: Shift | Стрельба: Z/Пробел | Бомба: X",
+        danmakuControlsTip: "Движение: WASD/Стрелки | Стрельба: Z/Пробел | Бомба: X",
         danmakuFocusBtn: "Фокус",
         danmakuBombBtn: "Бомба",
         danmakuSpellCard: "СПЕЛЛ-КАРТА: ",
@@ -302,7 +301,6 @@ const i18n = {
         colorPurple: "Фиолетовая",
         nickPromptTitle: "Твой никнейм",
         nickPromptSubtitle: "Придумай никнейм для рекордов и профиля",
-        skipBtn: "Пропустить",
-        danmakuPlayerSpeed: "Скорость игрока"
+        skipBtn: "Пропустить"
     }
 };

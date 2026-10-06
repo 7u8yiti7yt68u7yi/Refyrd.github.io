@@ -155,17 +155,12 @@ let highScore = parseInt(localStorage.getItem('danmakuHighScore') || '0', 10);
 let lastScore = 0;
 
 // Entities
-let savedSpeed = parseFloat(localStorage.getItem('danmakuPlayerSpeed') || '3.6');
-if (isNaN(savedSpeed) || savedSpeed < 2.0 || savedSpeed > 5.5) savedSpeed = 3.6;
-
 const player = {
     x: GAME_WIDTH / 2,
     y: GAME_HEIGHT - 70,
     w: 26,
     h: 30,
-    speedNormal: savedSpeed,
-    speedFocus: Math.round(savedSpeed * (1.7 / 3.6) * 10) / 10,
-    focused: false,
+    speed: 2.8, // Single canonical Touhou speed
     invincibleTimer: 0,
     shootCooldown: 0,
     optionAngle: 0
@@ -185,7 +180,6 @@ const keys = {
     right: false,
     up: false,
     down: false,
-    focus: false,
     shoot: false,
     bomb: false
 };
@@ -216,10 +210,6 @@ function handleDanmakuKey(e, isDown) {
     }
     if (code === 'KeyS' || code === 'ArrowDown' || k === 's' || k === 'ы' || k === 'arrowdown') {
         keys.down = isDown;
-        handled = true;
-    }
-    if (code === 'ShiftLeft' || code === 'ShiftRight' || k === 'shift') {
-        keys.focus = isDown;
         handled = true;
     }
     if (code === 'KeyZ' || code === 'Space' || k === 'z' || k === 'я' || k === ' ') {
@@ -284,14 +274,7 @@ canvas.addEventListener('touchend', () => {
 });
 
 // Touch buttons
-const touchFocusBtn = document.getElementById('touchFocusBtn');
 const touchBombBtn = document.getElementById('touchBombBtn');
-if (touchFocusBtn) {
-    touchFocusBtn.addEventListener('click', () => {
-        keys.focus = !keys.focus;
-        touchFocusBtn.classList.toggle('active', keys.focus);
-    });
-}
 if (touchBombBtn) {
     touchBombBtn.addEventListener('click', () => {
         triggerBomb();
@@ -344,6 +327,7 @@ function startNewGame() {
     document.getElementById('pauseScreen').classList.remove('active');
 
     gameState = 'playing';
+    accumulator = 0;
     lastFrameTime = performance.now();
     updateScoreDisplay();
 }
@@ -375,6 +359,7 @@ function togglePause() {
     } else if (gameState === 'paused') {
         gameState = 'playing';
         document.getElementById('pauseScreen').classList.remove('active');
+        accumulator = 0;
         lastFrameTime = performance.now();
     }
 }
@@ -624,9 +609,7 @@ function update(dt) {
         player.invincibleTimer -= dt;
     }
 
-    // Player focus & movement
-    player.focused = keys.focus;
-    const curSpeed = (player.focused ? player.speedFocus : player.speedNormal);
+    // Player movement (Canonical Touhou Speed)
     let mx = 0;
     let my = 0;
     if (keys.left) mx -= 1;
@@ -638,31 +621,25 @@ function update(dt) {
         mx *= 0.7071;
         my *= 0.7071;
     }
-    player.x = Math.max(16, Math.min(GAME_WIDTH - 16, player.x + mx * curSpeed));
-    player.y = Math.max(20, Math.min(GAME_HEIGHT - 20, player.y + my * curSpeed));
+    player.x = Math.max(16, Math.min(GAME_WIDTH - 16, player.x + mx * player.speed));
+    player.y = Math.max(20, Math.min(GAME_HEIGHT - 20, player.y + my * player.speed));
 
     // Satellite option rotation
-    player.optionAngle += dt * (player.focused ? 6 : 3.5);
+    player.optionAngle += dt * 4;
 
-    // Player shooting
+    // Player shooting (Canonical Touhou Balanced Pattern)
     player.shootCooldown -= dt;
     if ((keys.shoot || isTouching) && player.shootCooldown <= 0) {
         player.shootCooldown = 0.085; // ~11 shots/sec
         playSfx('shoot');
 
-        if (player.focused) {
-            // High-damage concentrated forward streams (Touhou Focused Shot)
-            playerBullets.push({ x: player.x - 7, y: player.y - 14, vx: 0, vy: -15, dmg: 14, w: 4, h: 14, color: '#00E5FF' });
-            playerBullets.push({ x: player.x + 7, y: player.y - 14, vx: 0, vy: -15, dmg: 14, w: 4, h: 14, color: '#00E5FF' });
-            playerBullets.push({ x: player.x - 2, y: player.y - 18, vx: 0, vy: -16, dmg: 16, w: 4, h: 16, color: '#FFFFFF' });
-            playerBullets.push({ x: player.x + 2, y: player.y - 18, vx: 0, vy: -16, dmg: 16, w: 4, h: 16, color: '#FFFFFF' });
-        } else {
-            // Wide-angled fan spread (Touhou Unfocused Shot)
-            playerBullets.push({ x: player.x - 6, y: player.y - 14, vx: 0, vy: -14, dmg: 11, w: 5, h: 12, color: '#29B6F6' });
-            playerBullets.push({ x: player.x + 6, y: player.y - 14, vx: 0, vy: -14, dmg: 11, w: 5, h: 12, color: '#29B6F6' });
-            playerBullets.push({ x: player.x - 14, y: player.y - 10, vx: -2.2, vy: -13, dmg: 9, w: 5, h: 12, color: '#4FC3F7' });
-            playerBullets.push({ x: player.x + 14, y: player.y - 10, vx: 2.2, vy: -13, dmg: 9, w: 5, h: 12, color: '#4FC3F7' });
-        }
+        // Forward core talisman streams
+        playerBullets.push({ x: player.x - 7, y: player.y - 14, vx: 0, vy: -15, dmg: 14, w: 4, h: 14, color: '#00E5FF' });
+        playerBullets.push({ x: player.x + 7, y: player.y - 14, vx: 0, vy: -15, dmg: 14, w: 4, h: 14, color: '#00E5FF' });
+
+        // Supportive angled needle streams
+        playerBullets.push({ x: player.x - 14, y: player.y - 10, vx: -1.4, vy: -14, dmg: 10, w: 4, h: 12, color: '#4FC3F7' });
+        playerBullets.push({ x: player.x + 14, y: player.y - 10, vx: 1.4, vy: -14, dmg: 10, w: 4, h: 12, color: '#4FC3F7' });
     }
 
     // Update Player Bullets
@@ -1023,8 +1000,8 @@ function drawPlayer(colors) {
     ctx.save();
     ctx.translate(player.x, player.y);
 
-    // Satellite focus option orbs (spread wide in normal mode, drawn close in focus)
-    const optionDist = player.focused ? 13 : 26;
+    // Satellite option orbs (Canonical Touhou Style)
+    const optionDist = 20;
     const optY = Math.sin(player.optionAngle) * 3;
     for (let side of [-1, 1]) {
         const ox = side * optionDist;
@@ -1068,45 +1045,11 @@ function drawPlayer(colors) {
     ctx.closePath();
     ctx.fill();
 
-    // Central Ribbon / Bow
+    // Central Core Jewel (Touhou 6 Style)
     ctx.fillStyle = colors.error;
     ctx.beginPath();
     ctx.arc(0, 2, 3, 0, Math.PI * 2);
     ctx.fill();
-
-    // ========================================================
-    // TOUHOU 6 HITBOX RENDERING
-    // In Touhou 6, during Focus Mode (Shift), the exact central
-    // 3px micro-hitbox is prominently highlighted with high contrast!
-    // ========================================================
-    if (player.focused) {
-        // Outer pulsing focus reticle
-        const pulse = Math.sin(gameTime * 12) * 1.5;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(0, 0, 9 + pulse, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Exact Touhou 6 Hitbox Core (radius = 3px)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.shadowColor = '#FF1744';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(0, 0, HITBOX_RADIUS + 1, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Exact center red jewel point (Touhou 6 icon)
-        ctx.fillStyle = '#FF1744';
-        ctx.beginPath();
-        ctx.arc(0, 0, HITBOX_RADIUS, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath();
-        ctx.arc(0, 0, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-    }
 
     ctx.restore();
 }
@@ -1334,17 +1277,27 @@ function drawBoss(b, colors) {
     const hpPct = Math.max(0, b.hp / b.maxHp);
     const barWidth = GAME_WIDTH - 60;
     ctx.save();
+
+    // Background track
     ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.beginPath();
     ctx.roundRect(30, 18, barWidth, 6, 3);
     ctx.fill();
 
-    ctx.fillStyle = b.color;
-    ctx.shadowColor = b.color;
-    ctx.shadowBlur = 8;
-    ctx.roundRect(30, 18, barWidth * hpPct, 6, 3);
-    ctx.fill();
+    // Active Health Fill (shrinks as boss loses HP!)
+    if (hpPct > 0) {
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 8;
+        const curW = Math.max(1, barWidth * hpPct);
+        const r = Math.min(3, curW / 2);
+        ctx.beginPath();
+        ctx.roundRect(30, 18, curW, 6, r);
+        ctx.fill();
+    }
 
     ctx.fillStyle = '#FFFFFF';
+    ctx.shadowBlur = 0;
     ctx.font = '700 11px system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(b.name, 32, 14);
@@ -1441,14 +1394,28 @@ function drawHUD(colors) {
     ctx.restore();
 }
 
-// === MAIN LOOP ===
+// === MAIN LOOP (Fixed 60 FPS Timestep for 100% monitor refresh rate parity) ===
+const TICK_RATE = 1 / 60; // Exact 60 Hz physics tick
+let accumulator = 0;
+
 function gameLoop(now) {
-    const dt = Math.min((now - lastFrameTime) / 1000, 0.05); // Cap to 50ms to prevent spiral of death
+    const elapsed = Math.min((now - lastFrameTime) / 1000, 0.1);
     lastFrameTime = now;
 
-    update(dt);
-    draw();
+    if (gameState === 'playing') {
+        accumulator += elapsed;
+        let steps = 0;
+        while (accumulator >= TICK_RATE && steps < 5) {
+            update(TICK_RATE);
+            accumulator -= TICK_RATE;
+            steps++;
+        }
+        if (steps >= 5) accumulator = 0;
+    } else {
+        accumulator = 0;
+    }
 
+    draw();
     requestAnimationFrame(gameLoop);
 }
 requestAnimationFrame(gameLoop);
@@ -1492,16 +1459,9 @@ function applyLanguage() {
     if (controlsTitle) controlsTitle.innerText = currentLang === 'ru' ? 'Управление' : 'Controls';
     const controlsTip = document.getElementById('uiControlsTip');
     if (controlsTip) controlsTip.innerHTML = currentLang === 'ru' 
-        ? 'WASD/Стрелки — движение<br><b>Shift</b> — Точный фокус (хитбокс 3px)<br><b>Z / Пробел</b> — стрельба | <b>X</b> — Бомба'
-        : 'WASD/Arrows — move<br><b>Shift</b> — Precision focus (3px hitbox)<br><b>Z / Space</b> — shoot | <b>X</b> — Bomb';
+        ? 'WASD/Стрелки — движение | <b>Z / Пробел</b> — стрельба | <b>X</b> — Бомба'
+        : 'WASD/Arrows — move | <b>Z / Space</b> — shoot | <b>X</b> — Bomb';
 
-    const speedLabelStart = document.getElementById('uiSpeedLabel');
-    if (speedLabelStart) speedLabelStart.textContent = t.danmakuPlayerSpeed || 'Скорость игрока';
-    const speedLabelPause = document.getElementById('uiPauseSpeedLabel');
-    if (speedLabelPause) speedLabelPause.textContent = t.danmakuPlayerSpeed || 'Скорость игрока';
-
-    const touchFocus = document.getElementById('touchFocusBtn');
-    if (touchFocus) touchFocus.innerText = t.danmakuFocusBtn || 'Фокус (Shift)';
     const touchBomb = document.getElementById('touchBombBtn');
     if (touchBomb) touchBomb.innerText = t.danmakuBombBtn || 'Бомба (X)';
 
@@ -2849,38 +2809,8 @@ function initCookieBanner() {
     });
 }
 
-// === PLAYER SPEED SLIDERS (PC ONLY) ===
-function setPlayerSpeed(val) {
-    let num = parseFloat(val);
-    if (isNaN(num)) num = 3.6;
-    num = Math.max(2.0, Math.min(5.5, Math.round(num * 10) / 10));
-    player.speedNormal = num;
-    player.speedFocus = Math.round(num * (1.7 / 3.6) * 10) / 10;
-    try {
-        localStorage.setItem('danmakuPlayerSpeed', num.toString());
-    } catch (_) {}
-    const valText = num.toFixed(1);
-    const bStart = document.getElementById('speedValBadgeStart');
-    if (bStart) bStart.textContent = valText;
-    const bPause = document.getElementById('speedValBadgePause');
-    if (bPause) bPause.textContent = valText;
-    const sStart = document.getElementById('speedSliderStart');
-    if (sStart && Math.abs(parseFloat(sStart.value) - num) > 0.01) sStart.value = valText;
-    const sPause = document.getElementById('speedSliderPause');
-    if (sPause && Math.abs(parseFloat(sPause.value) - num) > 0.01) sPause.value = valText;
-}
-
-function initSpeedSliders() {
-    const sStart = document.getElementById('speedSliderStart');
-    const sPause = document.getElementById('speedSliderPause');
-    if (sStart) sStart.addEventListener('input', (e) => setPlayerSpeed(e.target.value));
-    if (sPause) sPause.addEventListener('input', (e) => setPlayerSpeed(e.target.value));
-    setPlayerSpeed(player.speedNormal);
-}
-
 // Initialize on load
 applyTheme();
 applyColor(activeColor);
 applyLanguage();
 initCookieBanner();
-initSpeedSliders();
