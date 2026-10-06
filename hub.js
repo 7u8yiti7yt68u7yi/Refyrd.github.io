@@ -77,6 +77,15 @@ function applyLanguage() {
     const badgeClassic = document.getElementById('uiBadgeClassic');
     if (badgeClassic) badgeClassic.innerText = t.badgeClassic;
 
+    const danmakuTitle = document.getElementById('uiGameDanmakuTitle');
+    if (danmakuTitle) danmakuTitle.innerText = t.gameDanmakuTitle;
+    const danmakuDesc = document.getElementById('uiGameDanmakuDesc');
+    if (danmakuDesc) danmakuDesc.innerText = t.gameDanmakuDesc;
+    const playBtnDanmaku = document.getElementById('uiPlayBtnDanmaku');
+    if (playBtnDanmaku) playBtnDanmaku.innerText = t.badgePlayable;
+    const badgeBulletHell = document.getElementById('uiBadgeBulletHell');
+    if (badgeBulletHell) badgeBulletHell.innerText = t.badgeBulletHell;
+
     const soonTitle = document.getElementById('uiGameSoonTitle');
     if (soonTitle) soonTitle.innerText = t.gameSoonTitle;
     const soonDesc = document.getElementById('uiGameSoonDesc');
