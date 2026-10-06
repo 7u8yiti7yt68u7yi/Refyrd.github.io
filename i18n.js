@@ -125,7 +125,13 @@ const i18n = {
         authSwitchRegister: "No account? Register",
         authSwitchSignIn: "Already have an account? Sign In",
         authRegisterBtn: "Register",
-        deleteBtn: "Delete"
+        deleteBtn: "Delete",
+        paletteTooltip: "Theme color",
+        colorNeutral: "Neutral",
+        colorGreen: "Green",
+        colorBlue: "Blue",
+        colorRed: "Red",
+        colorPurple: "Purple"
     },
     ru: {
         scoreTitle: "СЧЕТ",
@@ -252,6 +258,12 @@ const i18n = {
         authSwitchRegister: "Нет аккаунта? Зарегистрироваться",
         authSwitchSignIn: "Уже есть аккаунт? Войти",
         authRegisterBtn: "Зарегистрироваться",
-        deleteBtn: "Удалить"
+        deleteBtn: "Удалить",
+        paletteTooltip: "Цветовая тема",
+        colorNeutral: "Нейтральная",
+        colorGreen: "Зеленая",
+        colorBlue: "Синяя",
+        colorRed: "Красная",
+        colorPurple: "Фиолетовая"
     }
 };

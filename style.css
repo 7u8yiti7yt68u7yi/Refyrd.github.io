@@ -303,6 +303,61 @@ body {
 .icon-btn:hover { background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
 .icon-btn:active { transform: scale(0.92); background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 14%, transparent); }
 
+/* === PALETTE DROPDOWN (M3 EXPRESSIVE) === */
+.palette-dropdown-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#paletteBtn {
+    color: var(--md-sys-color-primary);
+}
+.palette-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    padding: 8px 10px;
+    box-shadow: var(--elevation-3);
+    z-index: 120;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px) scale(0.92);
+    transform-origin: top right;
+    transition: opacity var(--md-sys-motion-duration-short) ease,
+                transform var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-emphasized);
+}
+.palette-popover.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0) scale(1);
+}
+.palette-popover .color-picker {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.palette-popover .color-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--elevation-1);
+    transition: transform var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-emphasized),
+                box-shadow var(--md-sys-motion-duration-short) ease;
+}
+.palette-popover .color-btn:hover {
+    transform: scale(1.15);
+}
+.palette-popover .color-btn.active {
+    transform: scale(1.22);
+    box-shadow: 0 0 0 2px var(--md-sys-color-surface-container-high), 0 0 0 4px var(--md-sys-color-primary);
+}
+
 .game-container { position: relative; width: min(420px, 100vw - 32px); height: min(420px, 100vw - 32px, 78vh); z-index: 10; margin: 0 auto; touch-action: none; }
 #gameCanvas {
     width: 100%; height: 100%;

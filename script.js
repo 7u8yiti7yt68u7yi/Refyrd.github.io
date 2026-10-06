@@ -46,6 +46,17 @@ function applyLanguage() {
     if (snakeToHub) snakeToHub.innerText = i18n[currentLang].allGamesBtn;
     const gameOverToHub = document.getElementById('uiGameOverToHubBtn');
     if (gameOverToHub) gameOverToHub.innerText = i18n[currentLang].allGamesBtn;
+
+    const paletteBtnEl = document.getElementById('paletteBtn');
+    if (paletteBtnEl) paletteBtnEl.title = i18n[currentLang].paletteTooltip || (currentLang === 'ru' ? 'Цветовая тема' : 'Theme color');
+    const palettePopoverEl = document.getElementById('palettePopover');
+    if (palettePopoverEl) {
+        palettePopoverEl.querySelectorAll('.color-btn').forEach(btn => {
+            const c = btn.getAttribute('data-c');
+            const cap = c.charAt(0).toUpperCase() + c.slice(1);
+            btn.title = i18n[currentLang]['color' + cap] || c;
+        });
+    }
     
     document.querySelector('.leaderboard h3').innerText = i18n[currentLang].lbTitle;
     document.getElementById('uiDevTitle').innerText = i18n[currentLang].devTitle;
@@ -204,21 +215,52 @@ themeToggle.addEventListener('click', () => {
 
 // === ВЫБОР ЦВЕТА И РАЗМЕРА ===
 const colorBtns = document.querySelectorAll('.color-btn');
-const savedColor = getCookie('snakeColor') || 'neutral';
+const paletteBtn = document.getElementById('paletteBtn');
+const palettePopover = document.getElementById('palettePopover');
+let savedColor = getCookie('snakeColor') || 'neutral';
+
+function applyColor(c) {
+    savedColor = c;
+    document.documentElement.setAttribute('data-color', c);
+    body.setAttribute('data-color', c);
+    setCookie('snakeColor', c, 365);
+    colorBtns.forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-c') === c);
+    });
+}
+applyColor(savedColor);
+
 colorBtns.forEach(btn => {
-    if (btn.getAttribute('data-c') === savedColor) {
-        colorBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        body.setAttribute('data-color', savedColor);
-    }
-    btn.addEventListener('click', () => {
-        colorBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    btn.addEventListener('click', (e) => {
         const c = btn.getAttribute('data-c');
-        body.setAttribute('data-color', c);
-        setCookie('snakeColor', c);
+        applyColor(c);
+        if (palettePopover && palettePopover.contains(btn)) {
+            e.stopPropagation();
+            setTimeout(() => {
+                palettePopover.classList.remove('active');
+            }, 180);
+        }
     });
 });
+
+if (paletteBtn && palettePopover) {
+    paletteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        palettePopover.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!palettePopover.contains(e.target) && e.target !== paletteBtn && !paletteBtn.contains(e.target)) {
+            palettePopover.classList.remove('active');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && palettePopover.classList.contains('active')) {
+            palettePopover.classList.remove('active');
+        }
+    });
+}
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
