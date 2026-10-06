@@ -145,6 +145,17 @@
                 <div class="auth-info-line" id="accEmail"></div>
                 
                 <div class="auth-acc-section" style="width: 100%;">
+                    <div class="auth-acc-label" id="uiAccLinkedLabel" style="font-size: 11px; opacity: 0.6; margin-bottom: 4px; text-transform: uppercase;">Привязанные провайдеры</div>
+                    <div class="auth-providers" id="accProviders"></div>
+                    <div class="auth-acc-label" id="uiAccLinkAnotherLabel" style="font-size: 11px; opacity: 0.6; margin-top: 8px; margin-bottom: 4px; text-transform: uppercase;">Привязать другой</div>
+                    <div class="auth-providers">
+                        <button class="auth-prov-btn" data-prov="google">+ Google</button>
+                        <button class="auth-prov-btn" data-prov="github">+ GitHub</button>
+                        <button class="auth-prov-btn" id="accLinkEmailBtn" data-prov="password">+ Email</button>
+                    </div>
+                </div>
+
+                <div class="auth-acc-section" style="width: 100%;">
                     <div class="auth-acc-label" id="uiAccNickLabel" style="font-size: 11px; opacity: 0.6; margin-bottom: 4px; text-transform: uppercase;">Никнейм</div>
                     <div style="display:flex; gap:8px; width:100%; align-items:center;">
                         <input type="text" id="accNickInput" class="name-input" placeholder="Никнейм" maxlength="12" autocomplete="off">
@@ -154,6 +165,18 @@
                 </div>
 
                 <button class="btn-secondary" id="authSignOutBtn" style="margin-top: 8px; width: 100%; height: 40px; font-size: 13px;">Выйти из аккаунта</button>
+
+                <div id="authLinkEmailView" style="display:none; width:100%; flex-direction:column; gap:10px;">
+                    <hr style="width:100%; opacity:0.2; margin:4px 0;">
+                    <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                        <button class="auth-back" id="authLinkEmailBack" style="font-size:13px;">&larr; Назад</button>
+                        <div class="auth-title" id="uiAuthLinkEmailTitle" style="flex:1; text-align:left; font-size:15px;">Привязать Email</div>
+                    </div>
+                    <input type="email" id="authLinkEmail" class="name-input" placeholder="Email" autocomplete="email">
+                    <input type="password" id="authLinkPassword" class="name-input" placeholder="Пароль" autocomplete="new-password">
+                    <button class="btn-primary" id="authLinkEmailLink" style="height:40px; font-size:13px;">Привязать</button>
+                    <div class="auth-status" id="authLinkEmailStatus"></div>
+                </div>
             </div>
         </div>
     </div>

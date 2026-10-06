@@ -85,6 +85,10 @@ function applyLanguage() {
     if (authDivider) authDivider.textContent = i18n[currentLang].or;
     const authAccountTitle = document.getElementById('authAccountTitle');
     if (authAccountTitle) authAccountTitle.innerText = i18n[currentLang].authAccount;
+    const uiAccLinkedLabel = document.getElementById('uiAccLinkedLabel');
+    if (uiAccLinkedLabel) uiAccLinkedLabel.innerText = i18n[currentLang].authLinkedProviders || 'Linked providers';
+    const uiAccLinkAnotherLabel = document.getElementById('uiAccLinkAnotherLabel');
+    if (uiAccLinkAnotherLabel) uiAccLinkAnotherLabel.innerText = i18n[currentLang].authLinkAnother || 'Link another';
     const uiAccNickLabel = document.getElementById('uiAccNickLabel');
     if (uiAccNickLabel) uiAccNickLabel.innerText = i18n[currentLang].authNickname;
     const accNickInput = document.getElementById('accNickInput');
@@ -93,6 +97,19 @@ function applyLanguage() {
     if (accNickSave) accNickSave.innerText = i18n[currentLang].authSave;
     const authSignOutBtn = document.getElementById('authSignOutBtn');
     if (authSignOutBtn) authSignOutBtn.innerText = i18n[currentLang].authSignOut;
+
+    const uiAuthLinkEmailTitle = document.getElementById('uiAuthLinkEmailTitle');
+    if (uiAuthLinkEmailTitle) uiAuthLinkEmailTitle.innerText = i18n[currentLang].authLinkEmail || 'Link Email';
+    const authLinkEmailBack = document.getElementById('authLinkEmailBack');
+    if (authLinkEmailBack) authLinkEmailBack.innerHTML = '&larr; ' + (i18n[currentLang].back || 'Back');
+    const authLinkEmail = document.getElementById('authLinkEmail');
+    if (authLinkEmail) authLinkEmail.placeholder = i18n[currentLang].authEmailPlaceholder || 'Email';
+    const authLinkPassword = document.getElementById('authLinkPassword');
+    if (authLinkPassword) authLinkPassword.placeholder = i18n[currentLang].authPassPlaceholder || 'Password';
+    const authLinkEmailLink = document.getElementById('authLinkEmailLink');
+    if (authLinkEmailLink) authLinkEmailLink.innerText = i18n[currentLang].authLinkEmailBtn || 'Link';
+
+    renderProviders();
     const authBtnEl = document.getElementById('authBtn');
     if (authBtnEl) authBtnEl.title = (authUser && !authUser.isAnonymous) ? (authUser.displayName || authUser.email || i18n[currentLang].authAccount) : (i18n[currentLang].signInTooltip || 'Sign in');
     const lbStatusSpan = document.querySelector('#lbStatus span:last-child');
@@ -302,27 +319,118 @@ function showStatus(el, msg, isError) {
 }
 function clearStatus(el) { if (el) el.textContent = ''; }
 
-function setAuthMode(register) {
-    isRegisterMode = register;
-    const t = i18n[currentLang] || i18n.ru;
-    if (isRegisterMode) {
-        if (authTitle) authTitle.innerText = t.authRegisterBtn || 'Регистрация';
-        if (authRegNick) authRegNick.style.display = 'block';
-        if (authSubmitBtn) authSubmitBtn.innerText = t.authRegisterBtn || 'Зарегистрироваться';
-        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchSignIn || 'Уже есть аккаунт? Войти';
-    } else {
-        if (authTitle) authTitle.innerText = t.authSignIn || 'Войти';
-        if (authRegNick) authRegNick.style.display = 'none';
-        if (authSubmitBtn) authSubmitBtn.innerText = t.authSignIn || 'Войти';
-        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchRegister || 'Нет аккаунта? Зарегистрироваться';
-    }
-    clearStatus(authStatus);
+const accProviders = document.getElementById('accProviders');
+const accNickInput = document.getElementById('accNickInput');
+const accNickSave = document.getElementById('accNickSave');
+const accNickStatus = document.getElementById('accNickStatus');
+const authSignOutBtn = document.getElementById('authSignOutBtn');
+
+const authLinkEmailView = document.getElementById('authLinkEmailView');
+const authLinkEmailBack = document.getElementById('authLinkEmailBack');
+const authLinkEmailLink = document.getElementById('authLinkEmailLink');
+const authLinkEmailInput = document.getElementById('authLinkEmail');
+const authLinkPassInput = document.getElementById('authLinkPassword');
+const authLinkEmailStat = document.getElementById('authLinkEmailStatus');
+
+const NICK_COOLDOWN = 3 * 24 * 60 * 60 * 1000; // 3 days
+
+function formatCooldownUntil(timestamp) {
+	const d = new Date(timestamp);
+	const pad = n => String(n).padStart(2, '0');
+	return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-if (authToggleRegister) {
-    authToggleRegister.addEventListener('click', () => {
-        setAuthMode(!isRegisterMode);
-    });
+function renderProviders() {
+	if (!authUser || authUser.isAnonymous || !accProviders) return;
+	const methods = (authUser.providerData || []).map(p => p.providerId);
+	const provLabel = {
+		'google.com': (i18n[currentLang] || i18n.ru).providerGoogle || 'Google',
+		'github.com': (i18n[currentLang] || i18n.ru).providerGithub || 'GitHub',
+		'password': (i18n[currentLang] || i18n.ru).providerEmail || 'Email'
+	};
+	accProviders.innerHTML = methods.map(id => {
+		return `<span class="auth-prov-btn badge">${provLabel[id] || id}</span>`;
+	}).join('');
+	const used = new Set(methods);
+	document.querySelectorAll('#authAccountView .auth-prov-btn[data-prov]').forEach(btn => {
+		const prov = btn.dataset.prov;
+		const target = prov === 'password' ? 'password' : prov + '.com';
+		const labels = {
+			google: (i18n[currentLang] || i18n.ru).providerGoogle || 'Google',
+			github: (i18n[currentLang] || i18n.ru).providerGithub || 'GitHub',
+			password: (i18n[currentLang] || i18n.ru).providerEmail || 'Email'
+		};
+		const label = labels[prov] || prov;
+		const isLinked = used.has(target);
+		btn.disabled = isLinked;
+		btn.textContent = isLinked ? label : '+ ' + label;
+	});
+}
+
+function toggleAccView(showLink) {
+	if (authLinkEmailView) authLinkEmailView.style.display = showLink ? 'flex' : 'none';
+	const accSections = document.querySelectorAll('#authAccountView > .auth-acc-section, #authAccountView > .auth-title, #authAccountView > .auth-info-line, #authAccountView > #authSignOutBtn');
+	accSections.forEach(el => { if (el) el.style.display = showLink ? 'none' : ''; });
+}
+
+document.querySelectorAll('#authAccountView .auth-prov-btn[data-prov]').forEach(btn => {
+	btn.addEventListener('click', () => {
+		if (btn.disabled || !authUser) return;
+		const prov = btn.dataset.prov;
+		if (prov === 'password') { toggleAccView(true); return; }
+		const user = auth.currentUser;
+		if (!user) return;
+
+		function handleLink(promise) {
+			const t = i18n[currentLang] || i18n.ru;
+			const pLabel = { google: t.providerGoogle || 'Google', github: t.providerGithub || 'GitHub' }[prov] || prov;
+			promise.then(() => {
+				authUser = auth.currentUser;
+				renderProviders();
+				showStatus(accNickStatus, pLabel + (t.linked || ' привязан!'), false);
+			}).catch(e => {
+				showStatus(accNickStatus, e.code === 'auth/credential-already-in-use' ? (t.alreadyLinked || 'Аккаунт уже привязан') : e.message, true);
+			});
+		}
+
+		if (prov === 'google') {
+			handleLink(user.linkWithPopup(new firebase.auth.GoogleAuthProvider()));
+		} else if (prov === 'github') {
+			handleLink(user.linkWithPopup(new firebase.auth.GithubAuthProvider()));
+		}
+	});
+});
+
+if (authLinkEmailBack) authLinkEmailBack.addEventListener('click', () => toggleAccView(false));
+
+if (authLinkEmailLink) {
+	authLinkEmailLink.addEventListener('click', () => {
+		const t = i18n[currentLang] || i18n.ru;
+		if (!authUser || authUser.isAnonymous) {
+			showStatus(authLinkEmailStat, t.notLoggedIn || 'Не вошли', true);
+			return;
+		}
+		const email = (authLinkEmailInput?.value || '').trim();
+		const pass = (authLinkPassInput?.value || '');
+		if (!email || !pass) {
+			showStatus(authLinkEmailStat, t.fillEmailPass || 'Заполните email и пароль', true);
+			return;
+		}
+		if (pass.length < 6) {
+			showStatus(authLinkEmailStat, t.passMin6 || 'Пароль минимум 6 символов', true);
+			return;
+		}
+		showStatus(authLinkEmailStat, t.linking || 'Привязка...', false);
+		auth.currentUser.linkWithCredential(firebase.auth.EmailAuthProvider.credential(email, pass)).then(() => {
+			authUser = auth.currentUser;
+			renderProviders();
+			showStatus(accNickStatus, t.emailLinkedSuccess || 'Email успешно привязан!', false);
+			toggleAccView(false);
+			clearStatus(authLinkEmailStat);
+		}).catch(e => {
+			showStatus(authLinkEmailStat, e.code === 'auth/credential-already-in-use' ? (t.emailAlreadyLinked || 'Email уже используется') : e.message, true);
+		});
+	});
 }
 
 function updateAuthUI() {
@@ -337,6 +445,8 @@ function updateAuthUI() {
         if (accNickInput) accNickInput.value = savedName || (authUser && authUser.displayName) || getCookie('snakeNick') || '';
         if (authMainView) authMainView.style.display = 'none';
         if (authAccountView) authAccountView.style.display = 'flex';
+        toggleAccView(false);
+        renderProviders();
         loadNicknameFromFirestore();
     } else {
         if (authBtn) {
@@ -370,20 +480,45 @@ if (authSignOutBtn) {
     });
 }
 
+async function syncGuestScoreToUser(targetUid) {
+    if (!targetUid) return;
+    const localBest = parseInt(localStorage.getItem('snakeHighScore') || '0', 10);
+    const guestUid = getCookie('guestUid');
+    let guestScore = 0;
+    let guestDoc = null;
+    if (guestUid && guestUid !== targetUid) {
+        try {
+            guestDoc = await db.collection(LEADERBOARD_COLLECTION).doc(guestUid).get();
+            if (guestDoc.exists) guestScore = guestDoc.data().score || 0;
+        } catch (_) {}
+    }
+    const finalScore = Math.max(localBest, guestScore, score);
+    if (finalScore > 0) {
+        try {
+            const userLbRef = db.collection(LEADERBOARD_COLLECTION).doc(targetUid);
+            const userLbDoc = await userLbRef.get();
+            const curScore = userLbDoc.exists ? (userLbDoc.data().score || 0) : 0;
+            const myNick = savedName || getCookie('snakeNick') || authUser?.displayName || (i18n[currentLang] || i18n.ru).anonymous;
+            if (finalScore > curScore) {
+                await userLbRef.set({ name: myNick, score: finalScore }, { merge: true });
+                bestScore = finalScore;
+                localStorage.setItem('snakeHighScore', bestScore);
+                updateHighScoreDisplay();
+            }
+        } catch (e) {
+            console.warn('Sync score error:', e);
+        }
+    }
+}
+
 function upgradeFromAnonymous(action) {
     if (authUser && authUser.isAnonymous) {
-        const s = score;
         skipAnonSignIn = true;
-        return auth.signOut().then(() => action()).then(result => {
+        return auth.signOut().then(() => action()).then(async result => {
             skipAnonSignIn = false;
             const u = auth.currentUser;
             if (u && !u.isAnonymous) {
-                if (s > 0) {
-                    db.collection(LEADERBOARD_COLLECTION).doc(u.uid).set({
-                        name: savedName && isValidName(savedName) ? savedName : i18n[currentLang].anonymous,
-                        score: s
-                    }, { merge: true });
-                }
+                await syncGuestScoreToUser(u.uid);
             }
             return result;
         }).catch(e => {
@@ -395,32 +530,28 @@ function upgradeFromAnonymous(action) {
     return action();
 }
 
-const NICK_COOLDOWN = 7 * 24 * 60 * 60 * 1000; // 1 week
-
-function formatCooldownUntil(timestamp) {
-	const d = new Date(timestamp);
-	const pad = n => String(n).padStart(2, '0');
-	return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 // === NICKNAME FROM FIRESTORE ===
 function loadNicknameFromFirestore() {
 	if (!authUser || authUser.isAnonymous) return;
 	const userRef = db.collection('users').doc(authUser.uid);
+	const t = i18n[currentLang] || i18n.ru;
 	userRef.get().then(doc => {
 		if (doc.exists && doc.data().nickname) {
 			accNickInput.value = savedName = doc.data().nickname;
 			playerNameInput.value = savedName;
+			setCookie('snakeNick', savedName, 365);
 		} else {
 			accNickInput.value = savedName || '';
 		}
-		const remaining = (doc.exists ? (doc.data().nicknameLastChange || 0) : 0) + NICK_COOLDOWN - Date.now();
+		const lastChange = doc.exists ? (doc.data().nicknameLastChange || 0) : 0;
+		const remaining = lastChange + NICK_COOLDOWN - Date.now();
 		if (remaining > 0) {
-			accNickStatus.textContent = i18n[currentLang].cantChangeUntil + formatCooldownUntil(new Date(Date.now() + remaining));
-			accNickStatus.style.color = '';
+			accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(Date.now() + remaining));
+			accNickStatus.style.color = 'var(--md-sys-color-outline)';
 			accNickSave.disabled = accNickInput.disabled = true;
 		} else {
-			accNickStatus.textContent = '';
+			accNickStatus.textContent = t.cooldownDaysNotice || 'Смена никнейма доступна раз в 3 дня.';
+			accNickStatus.style.color = 'var(--md-sys-color-outline)';
 			accNickSave.disabled = accNickInput.disabled = false;
 		}
 	}).catch(e => {
@@ -433,13 +564,16 @@ if (accNickSave) {
     accNickSave.addEventListener('click', () => {
         if (!authUser || authUser.isAnonymous) return;
         const nick = sanitizeName(accNickInput.value.trim());
-        if (!isValidName(nick)) { accNickStatus.textContent = i18n[currentLang].invalidNickname; accNickStatus.style.color = 'var(--md-sys-color-error)'; return; }
+        const t = i18n[currentLang] || i18n.ru;
+        if (!isValidName(nick)) { accNickStatus.textContent = t.invalidNickname || 'Недопустимый никнейм'; accNickStatus.style.color = 'var(--md-sys-color-error)'; return; }
         const userRef = db.collection('users').doc(authUser.uid);
+        accNickSave.disabled = true;
         userRef.get().then(doc => {
             const lastChange = doc.exists ? (doc.data().nicknameLastChange || 0) : 0;
             if (Date.now() - lastChange < NICK_COOLDOWN) {
-                accNickStatus.textContent = i18n[currentLang].cantChangeUntil + formatCooldownUntil(new Date(lastChange + NICK_COOLDOWN));
-                accNickStatus.style.color = '';
+                accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(lastChange + NICK_COOLDOWN));
+                accNickStatus.style.color = 'var(--md-sys-color-error)';
+                accNickSave.disabled = accNickInput.disabled = true;
                 return;
             }
             const now = Date.now();
@@ -448,16 +582,18 @@ if (accNickSave) {
                 setCookie('snakeNick', savedName);
                 playerNameInput.value = savedName;
                 if (authUser.updateProfile) authUser.updateProfile({ displayName: nick }).catch(() => {});
-                const msg = i18n[currentLang].cantChangeUntil + formatCooldownUntil(new Date(now + NICK_COOLDOWN));
+                const msg = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(now + NICK_COOLDOWN));
                 accNickStatus.textContent = msg;
-                accNickStatus.style.color = '';
+                accNickStatus.style.color = 'var(--md-sys-color-primary)';
                 accNickSave.disabled = accNickInput.disabled = true;
-                if (authUid) db.collection(LEADERBOARD_COLLECTION).doc(authUid).set({ name: savedName && isValidName(savedName) ? savedName : i18n[currentLang].anonymous }, { merge: true });
+                if (authUid) db.collection(LEADERBOARD_COLLECTION).doc(authUid).set({ name: savedName && isValidName(savedName) ? savedName : (t.anonymous || 'Аноним') }, { merge: true });
             }).catch(e => {
+                accNickSave.disabled = false;
                 accNickStatus.textContent = e.message;
                 accNickStatus.style.color = 'var(--md-sys-color-error)';
             });
         }).catch(e => {
+            accNickSave.disabled = false;
             accNickStatus.textContent = e.message;
             accNickStatus.style.color = 'var(--md-sys-color-error)';
         });
@@ -514,11 +650,21 @@ if (authSubmitBtn) {
                     playerNameInput.value = savedName;
                 }
                 const cred = await upgradeFromAnonymous(() => auth.createUserWithEmailAndPassword(email, pass));
-                if (nick && cred && cred.user) {
-                    await cred.user.updateProfile({ displayName: nick }).catch(() => {});
+                if (cred && cred.user) {
+                    if (nick) {
+                        await cred.user.updateProfile({ displayName: nick }).catch(() => {});
+                        await db.collection('users').doc(cred.user.uid).set({
+                            nickname: nick,
+                            nicknameLastChange: Date.now()
+                        }, { merge: true }).catch(() => {});
+                    }
+                    await syncGuestScoreToUser(cred.user.uid);
                 }
             } else {
-                await upgradeFromAnonymous(() => auth.signInWithEmailAndPassword(email, pass));
+                const cred = await upgradeFromAnonymous(() => auth.signInWithEmailAndPassword(email, pass));
+                if (cred && cred.user) {
+                    await syncGuestScoreToUser(cred.user.uid);
+                }
             }
             authSubmitBtn.disabled = false;
             closeAuthModal();
@@ -531,24 +677,52 @@ if (authSubmitBtn) {
 }
 
 // === SOCIAL AUTH ===
-function handleSocialAuth(provider) {
-	showStatus(authStatus, (i18n[currentLang] || i18n.ru).signingIn || 'Вход...', false);
-	upgradeFromAnonymous(() => auth.signInWithPopup(provider))
-		.then(() => { closeAuthModal(); clearStatus(authStatus); })
-		.catch(e => {
-			if (e.code === 'auth/account-exists-with-different-credential') {
-				const email = e.email;
-				const labels = { password: i18n[currentLang].providerEmailPassword, 'google.com': i18n[currentLang].providerGoogle, 'github.com': i18n[currentLang].providerGithub };
-				auth.fetchSignInMethodsForEmail(email).then(methods => {
-					const method = methods.find(m => labels[m]);
-					showStatus(authStatus, method ? i18n[currentLang].accountExists + labels[method] + '.' : i18n[currentLang].accountExistsFallback, true);
-				}).catch(() => {
-					showStatus(authStatus, i18n[currentLang].accountExistsFallback, true);
-				});
-			} else {
-				showStatus(authStatus, e.message, true);
-			}
-		});
+async function handleSocialAuth(provider) {
+    showStatus(authStatus, (i18n[currentLang] || i18n.ru).signingIn || 'Вход...', false);
+    try {
+        let nick = sanitizeName(authRegNick?.value || '').trim();
+        if (nick && !isValidName(nick)) nick = '';
+        if (!nick) {
+            const promptTitle = currentLang === 'ru' ? 'Введите ваш никнейм для профиля:' : 'Enter your profile nickname:';
+            const defaultPrompt = savedName || getCookie('snakeNick') || '';
+            const entered = prompt(promptTitle, defaultPrompt);
+            if (entered) {
+                const cleaned = sanitizeName(entered).trim();
+                if (isValidName(cleaned)) nick = cleaned;
+            }
+        }
+
+        const cred = await upgradeFromAnonymous(() => auth.signInWithPopup(provider));
+        if (cred && cred.user) {
+            const targetNick = nick || cred.user.displayName || savedName || getCookie('snakeNick') || '';
+            if (targetNick) {
+                savedName = targetNick;
+                setCookie('snakeNick', targetNick, 365);
+                playerNameInput.value = targetNick;
+                await cred.user.updateProfile({ displayName: targetNick }).catch(() => {});
+                await db.collection('users').doc(cred.user.uid).set({
+                    nickname: targetNick,
+                    nicknameLastChange: Date.now()
+                }, { merge: true }).catch(() => {});
+            }
+            await syncGuestScoreToUser(cred.user.uid);
+        }
+        closeAuthModal();
+        clearStatus(authStatus);
+    } catch (e) {
+        if (e.code === 'auth/account-exists-with-different-credential') {
+            const email = e.email;
+            const labels = { password: i18n[currentLang].providerEmailPassword, 'google.com': i18n[currentLang].providerGoogle, 'github.com': i18n[currentLang].providerGithub };
+            auth.fetchSignInMethodsForEmail(email).then(methods => {
+                const method = methods.find(m => labels[m]);
+                showStatus(authStatus, method ? i18n[currentLang].accountExists + labels[method] + '.' : i18n[currentLang].accountExistsFallback, true);
+            }).catch(() => {
+                showStatus(authStatus, i18n[currentLang].accountExistsFallback, true);
+            });
+        } else {
+            showStatus(authStatus, e.message, true);
+        }
+    }
 }
 
 if (authGoogle) authGoogle.addEventListener('click', () => handleSocialAuth(new firebase.auth.GoogleAuthProvider()));
@@ -584,6 +758,7 @@ auth.onAuthStateChanged(user => {
     } else if (user && user.isAnonymous) {
         authUser = user;
         authUid = user.uid;
+        setCookie('guestUid', user.uid, 365);
         if (!getCookie('authUid')) {
             setCookie('authUid', user.uid, 365);
         }
@@ -594,9 +769,6 @@ auth.onAuthStateChanged(user => {
         authUser = null;
         authUid = null;
         deleteCookie('isLoggedIn');
-        if (!skipAnonSignIn) {
-            auth.signInAnonymously().catch(() => {});
-        }
     }
     updateAuthUI();
     updateNicknameInputVisibility();
@@ -1188,7 +1360,10 @@ fbSubmit.addEventListener('click', async () => {
 	fbStatus.textContent = i18n[currentLang].fbSending;
 	fbStatus.style.color = '';
 	try {
-		const currentUid = authUid || getCookie('authUid') || '';
+		if (!auth.currentUser) {
+			await auth.signInAnonymously();
+		}
+		const currentUid = auth.currentUser ? auth.currentUser.uid : (authUid || getCookie('authUid') || '');
 		await db.collection(Fb_COLLECTION).add({
 			name: name,
 			message: message,
@@ -1291,6 +1466,9 @@ function showMenu() {
 }
 
 function startGame() {
+    if (!auth.currentUser) {
+        auth.signInAnonymously().catch(() => {});
+    }
     const now = Date.now();
     const raw = sanitizeName(playerNameInput.value);
     playerNameInput.value = raw;

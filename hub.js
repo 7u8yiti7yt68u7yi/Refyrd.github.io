@@ -96,6 +96,10 @@ function applyLanguage() {
     if (uiAuthDividerText) uiAuthDividerText.textContent = t.or || 'or';
     const authAccountTitle = document.getElementById('authAccountTitle');
     if (authAccountTitle) authAccountTitle.innerText = t.authAccount || 'Account';
+    const uiAccLinkedLabel = document.getElementById('uiAccLinkedLabel');
+    if (uiAccLinkedLabel) uiAccLinkedLabel.innerText = t.authLinkedProviders || 'Linked providers';
+    const uiAccLinkAnotherLabel = document.getElementById('uiAccLinkAnotherLabel');
+    if (uiAccLinkAnotherLabel) uiAccLinkAnotherLabel.innerText = t.authLinkAnother || 'Link another';
     const uiAccNickLabel = document.getElementById('uiAccNickLabel');
     if (uiAccNickLabel) uiAccNickLabel.innerText = t.authNickname || 'Nickname';
     const accNickInput = document.getElementById('accNickInput');
@@ -105,6 +109,18 @@ function applyLanguage() {
     const authSignOutBtn = document.getElementById('authSignOutBtn');
     if (authSignOutBtn) authSignOutBtn.innerText = t.authSignOut || 'Sign Out';
 
+    const uiAuthLinkEmailTitle = document.getElementById('uiAuthLinkEmailTitle');
+    if (uiAuthLinkEmailTitle) uiAuthLinkEmailTitle.innerText = t.authLinkEmail || 'Link Email';
+    const authLinkEmailBack = document.getElementById('authLinkEmailBack');
+    if (authLinkEmailBack) authLinkEmailBack.innerHTML = '&larr; ' + (t.back || 'Back');
+    const authLinkEmail = document.getElementById('authLinkEmail');
+    if (authLinkEmail) authLinkEmail.placeholder = t.authEmailPlaceholder || 'Email';
+    const authLinkPassword = document.getElementById('authLinkPassword');
+    if (authLinkPassword) authLinkPassword.placeholder = t.authPassPlaceholder || 'Password';
+    const authLinkEmailLink = document.getElementById('authLinkEmailLink');
+    if (authLinkEmailLink) authLinkEmailLink.innerText = t.authLinkEmailBtn || 'Link';
+
+    renderProviders();
     setAuthMode(isRegisterMode);
 
     // Cookie banner translations
@@ -252,11 +268,168 @@ const authGoogle = document.getElementById('authGoogle');
 const authGithub = document.getElementById('authGithub');
 const authStatus = document.getElementById('authStatus');
 
-const accEmail = document.getElementById('accEmail');
+const accProviders = document.getElementById('accProviders');
 const accNickInput = document.getElementById('accNickInput');
 const accNickSave = document.getElementById('accNickSave');
 const accNickStatus = document.getElementById('accNickStatus');
 const authSignOutBtn = document.getElementById('authSignOutBtn');
+
+const authLinkEmailView = document.getElementById('authLinkEmailView');
+const authLinkEmailBack = document.getElementById('authLinkEmailBack');
+const authLinkEmailLink = document.getElementById('authLinkEmailLink');
+const authLinkEmailInput = document.getElementById('authLinkEmail');
+const authLinkPassInput = document.getElementById('authLinkPassword');
+const authLinkEmailStat = document.getElementById('authLinkEmailStatus');
+
+const NICK_COOLDOWN = 3 * 24 * 60 * 60 * 1000; // 3 days
+
+function formatCooldownUntil(timestamp) {
+    const d = new Date(timestamp);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function renderProviders() {
+    if (!authUser || authUser.isAnonymous || !accProviders) return;
+    const methods = (authUser.providerData || []).map(p => p.providerId);
+    const provLabel = {
+        'google.com': (i18n[currentLang] || i18n.ru).providerGoogle || 'Google',
+        'github.com': (i18n[currentLang] || i18n.ru).providerGithub || 'GitHub',
+        'password': (i18n[currentLang] || i18n.ru).providerEmail || 'Email'
+    };
+    accProviders.innerHTML = methods.map(id => {
+        return `<span class="auth-prov-btn badge">${provLabel[id] || id}</span>`;
+    }).join('');
+    const used = new Set(methods);
+    document.querySelectorAll('#authAccountView .auth-prov-btn[data-prov]').forEach(btn => {
+        const prov = btn.dataset.prov;
+        const target = prov === 'password' ? 'password' : prov + '.com';
+        const labels = {
+            google: (i18n[currentLang] || i18n.ru).providerGoogle || 'Google',
+            github: (i18n[currentLang] || i18n.ru).providerGithub || 'GitHub',
+            password: (i18n[currentLang] || i18n.ru).providerEmail || 'Email'
+        };
+        const label = labels[prov] || prov;
+        const isLinked = used.has(target);
+        btn.disabled = isLinked;
+        btn.textContent = isLinked ? label : '+ ' + label;
+    });
+}
+
+function toggleAccView(showLink) {
+    if (authLinkEmailView) authLinkEmailView.style.display = showLink ? 'flex' : 'none';
+    const accSections = document.querySelectorAll('#authAccountView > .auth-acc-section, #authAccountView > .auth-title, #authAccountView > .auth-info-line, #authAccountView > #authSignOutBtn');
+    accSections.forEach(el => { if (el) el.style.display = showLink ? 'none' : ''; });
+}
+
+document.querySelectorAll('#authAccountView .auth-prov-btn[data-prov]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.disabled || !authUser) return;
+        const prov = btn.dataset.prov;
+        if (prov === 'password') { toggleAccView(true); return; }
+        const user = auth.currentUser;
+        if (!user) return;
+
+        function handleLink(promise) {
+            const t = i18n[currentLang] || i18n.ru;
+            const pLabel = { google: t.providerGoogle || 'Google', github: t.providerGithub || 'GitHub' }[prov] || prov;
+            promise.then(() => {
+                authUser = auth.currentUser;
+                renderProviders();
+                if (accNickStatus) {
+                    accNickStatus.textContent = pLabel + (t.linked || ' привязан!');
+                    accNickStatus.style.color = 'var(--md-sys-color-primary)';
+                }
+            }).catch(e => {
+                if (accNickStatus) {
+                    accNickStatus.textContent = e.code === 'auth/credential-already-in-use' ? (t.alreadyLinked || 'Аккаунт уже привязан') : e.message;
+                    accNickStatus.style.color = 'var(--md-sys-color-error)';
+                }
+            });
+        }
+
+        if (prov === 'google') {
+            handleLink(user.linkWithPopup(new firebase.auth.GoogleAuthProvider()));
+        } else if (prov === 'github') {
+            handleLink(user.linkWithPopup(new firebase.auth.GithubAuthProvider()));
+        }
+    });
+});
+
+if (authLinkEmailBack) authLinkEmailBack.addEventListener('click', () => toggleAccView(false));
+
+if (authLinkEmailLink) {
+    authLinkEmailLink.addEventListener('click', () => {
+        const t = i18n[currentLang] || i18n.ru;
+        if (!authUser || authUser.isAnonymous) {
+            if (authLinkEmailStat) authLinkEmailStat.textContent = t.notLoggedIn || 'Не вошли';
+            return;
+        }
+        const email = (authLinkEmailInput?.value || '').trim();
+        const pass = (authLinkPassInput?.value || '');
+        if (!email || !pass) {
+            if (authLinkEmailStat) authLinkEmailStat.textContent = t.fillEmailPass || 'Заполните email и пароль';
+            return;
+        }
+        if (pass.length < 6) {
+            if (authLinkEmailStat) authLinkEmailStat.textContent = t.passMin6 || 'Пароль минимум 6 символов';
+            return;
+        }
+        if (authLinkEmailStat) {
+            authLinkEmailStat.textContent = t.linking || 'Привязка...';
+            authLinkEmailStat.style.color = 'var(--md-sys-color-on-surface)';
+        }
+        auth.currentUser.linkWithCredential(firebase.auth.EmailAuthProvider.credential(email, pass)).then(() => {
+            authUser = auth.currentUser;
+            renderProviders();
+            if (accNickStatus) {
+                accNickStatus.textContent = t.emailLinkedSuccess || 'Email успешно привязан!';
+                accNickStatus.style.color = 'var(--md-sys-color-primary)';
+            }
+            toggleAccView(false);
+            if (authLinkEmailStat) authLinkEmailStat.textContent = '';
+        }).catch(e => {
+            if (authLinkEmailStat) {
+                authLinkEmailStat.textContent = e.code === 'auth/credential-already-in-use' ? (t.emailAlreadyLinked || 'Email уже используется') : e.message;
+                authLinkEmailStat.style.color = 'var(--md-sys-color-error)';
+            }
+        });
+    });
+}
+
+function loadNicknameFromFirestore() {
+    if (!authUser || authUser.isAnonymous) return;
+    const userRef = db.collection('users').doc(authUser.uid);
+    const t = i18n[currentLang] || i18n.ru;
+    userRef.get().then(doc => {
+        if (doc.exists && doc.data().nickname) {
+            if (accNickInput) accNickInput.value = doc.data().nickname;
+            setCookie('snakeNick', doc.data().nickname, 365);
+        }
+        const lastChange = doc.exists ? (doc.data().nicknameLastChange || 0) : 0;
+        const remaining = lastChange + NICK_COOLDOWN - Date.now();
+        if (remaining > 0) {
+            if (accNickStatus) {
+                accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(Date.now() + remaining));
+                accNickStatus.style.color = 'var(--md-sys-color-outline)';
+            }
+            if (accNickSave) accNickSave.disabled = true;
+            if (accNickInput) accNickInput.disabled = true;
+        } else {
+            if (accNickStatus) {
+                accNickStatus.textContent = t.cooldownDaysNotice || 'Смена никнейма доступна раз в 3 дня.';
+                accNickStatus.style.color = 'var(--md-sys-color-outline)';
+            }
+            if (accNickSave) accNickSave.disabled = false;
+            if (accNickInput) accNickInput.disabled = false;
+        }
+    }).catch(e => {
+        if (accNickStatus) {
+            accNickStatus.textContent = e.message;
+            accNickStatus.style.color = 'var(--md-sys-color-error)';
+        }
+    });
+}
 
 function setAuthMode(register) {
     isRegisterMode = register;
@@ -286,9 +459,11 @@ function updateAuthViews() {
     if (isLoggedIn) {
         if (authMainView) authMainView.style.display = 'none';
         if (authAccountView) authAccountView.style.display = 'flex';
+        toggleAccView(false);
         if (accEmail) accEmail.textContent = authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : '');
         if (accNickInput) accNickInput.value = getCookie('snakeNick') || authUser.displayName || '';
-        if (accNickStatus) accNickStatus.textContent = '';
+        renderProviders();
+        loadNicknameFromFirestore();
     } else {
         if (authMainView) authMainView.style.display = 'flex';
         if (authAccountView) authAccountView.style.display = 'none';
@@ -306,13 +481,70 @@ function closeAuthModal() {
 if (authBtn) authBtn.addEventListener('click', openAuthModal);
 if (authClose) authClose.addEventListener('click', closeAuthModal);
 
-function handleSocialAuth(provider) {
+async function syncGuestScoreToUser(targetUid) {
+    if (!targetUid) return;
+    const localBest = parseInt(localStorage.getItem('snakeHighScore') || '0', 10);
+    const guestUid = getCookie('guestUid');
+    let guestScore = 0;
+    let guestDoc = null;
+    if (guestUid && guestUid !== targetUid) {
+        try {
+            guestDoc = await db.collection('leaderboard').doc(guestUid).get();
+            if (guestDoc.exists) guestScore = guestDoc.data().score || 0;
+        } catch (_) {}
+    }
+    const finalScore = Math.max(localBest, guestScore);
+    if (finalScore > 0) {
+        try {
+            const userLbRef = db.collection('leaderboard').doc(targetUid);
+            const userLbDoc = await userLbRef.get();
+            const curScore = userLbDoc.exists ? (userLbDoc.data().score || 0) : 0;
+            const myNick = getCookie('snakeNick') || authUser?.displayName || (i18n[currentLang] || i18n.ru).anonymous;
+            if (finalScore > curScore) {
+                await userLbRef.set({ name: myNick, score: finalScore }, { merge: true });
+                localStorage.setItem('snakeHighScore', finalScore);
+            }
+        } catch (e) {
+            console.warn('Sync score error:', e);
+        }
+    }
+}
+
+async function handleSocialAuth(provider) {
     if (authStatus) { authStatus.textContent = ''; }
-    auth.signInWithPopup(provider)
-        .then(() => { closeAuthModal(); })
-        .catch(e => {
-            if (authStatus) { authStatus.textContent = e.message; authStatus.style.color = 'var(--md-sys-color-error)'; }
-        });
+    try {
+        let nick = (authRegNick?.value || '').trim();
+        if (nick) {
+            nick = typeof sanitizeName === 'function' ? sanitizeName(nick) : nick;
+            if (typeof isValidName === 'function' && !isValidName(nick)) nick = '';
+        }
+        if (!nick) {
+            const promptTitle = currentLang === 'ru' ? 'Введите ваш никнейм для профиля:' : 'Enter your profile nickname:';
+            const defaultPrompt = getCookie('snakeNick') || '';
+            const entered = prompt(promptTitle, defaultPrompt);
+            if (entered) {
+                const cleaned = typeof sanitizeName === 'function' ? sanitizeName(entered) : entered.trim();
+                if (typeof isValidName === 'function' && isValidName(cleaned)) nick = cleaned;
+            }
+        }
+
+        const cred = await auth.signInWithPopup(provider);
+        if (cred && cred.user) {
+            const targetNick = nick || cred.user.displayName || getCookie('snakeNick') || '';
+            if (targetNick) {
+                setCookie('snakeNick', targetNick, 365);
+                await cred.user.updateProfile({ displayName: targetNick }).catch(() => {});
+                await db.collection('users').doc(cred.user.uid).set({
+                    nickname: targetNick,
+                    nicknameLastChange: Date.now()
+                }, { merge: true }).catch(() => {});
+            }
+            await syncGuestScoreToUser(cred.user.uid);
+        }
+        closeAuthModal();
+    } catch (e) {
+        if (authStatus) { authStatus.textContent = e.message; authStatus.style.color = 'var(--md-sys-color-error)'; }
+    }
 }
 if (authGoogle) authGoogle.addEventListener('click', () => handleSocialAuth(new firebase.auth.GoogleAuthProvider()));
 if (authGithub) authGithub.addEventListener('click', () => handleSocialAuth(new firebase.auth.GithubAuthProvider()));
@@ -351,9 +583,17 @@ if (authSubmitBtn) {
                     const cleanNick = typeof sanitizeName === 'function' ? sanitizeName(nick) : nick;
                     setCookie('snakeNick', cleanNick, 365);
                     await cred.user.updateProfile({ displayName: cleanNick }).catch(() => {});
+                    await db.collection('users').doc(cred.user.uid).set({
+                        nickname: cleanNick,
+                        nicknameLastChange: Date.now()
+                    }, { merge: true }).catch(() => {});
                 }
+                await syncGuestScoreToUser(cred.user.uid);
             } else {
-                await auth.signInWithEmailAndPassword(email, pass);
+                const cred = await auth.signInWithEmailAndPassword(email, pass);
+                if (cred && cred.user) {
+                    await syncGuestScoreToUser(cred.user.uid);
+                }
             }
             authSubmitBtn.disabled = false;
             closeAuthModal();
@@ -366,6 +606,7 @@ if (authSubmitBtn) {
 
 if (accNickSave) {
     accNickSave.addEventListener('click', async () => {
+        if (!authUser || authUser.isAnonymous) return;
         const rawNick = (accNickInput?.value || '').trim();
         const nick = typeof sanitizeName === 'function' ? sanitizeName(rawNick) : rawNick;
         const t = i18n[currentLang] || i18n.ru;
@@ -377,14 +618,38 @@ if (accNickSave) {
             }
             return;
         }
-        setCookie('snakeNick', nick, 365);
-        if (authUser) {
+
+        try {
+            accNickSave.disabled = true;
+            const userRef = db.collection('users').doc(authUser.uid);
+            const doc = await userRef.get();
+            const lastChange = doc.exists ? (doc.data().nicknameLastChange || 0) : 0;
+            if (Date.now() - lastChange < NICK_COOLDOWN) {
+                if (accNickStatus) {
+                    accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(lastChange + NICK_COOLDOWN));
+                    accNickStatus.style.color = 'var(--md-sys-color-error)';
+                }
+                accNickSave.disabled = accNickInput.disabled = true;
+                return;
+            }
+
+            const now = Date.now();
+            await userRef.set({ nickname: nick, nicknameLastChange: now }, { merge: true });
+            setCookie('snakeNick', nick, 365);
             await authUser.updateProfile({ displayName: nick }).catch(() => {});
-        }
-        if (accNickStatus) {
-            accNickStatus.textContent = t.authSaveSuccess || 'Сохранено!';
-            accNickStatus.style.color = 'var(--md-sys-color-primary)';
-            setTimeout(() => { if (accNickStatus) accNickStatus.textContent = ''; }, 2000);
+            await db.collection('leaderboard').doc(authUser.uid).set({ name: nick }, { merge: true }).catch(() => {});
+
+            if (accNickStatus) {
+                accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(now + NICK_COOLDOWN));
+                accNickStatus.style.color = 'var(--md-sys-color-primary)';
+            }
+            accNickSave.disabled = accNickInput.disabled = true;
+        } catch (e) {
+            accNickSave.disabled = false;
+            if (accNickStatus) {
+                accNickStatus.textContent = e.message;
+                accNickStatus.style.color = 'var(--md-sys-color-error)';
+            }
         }
     });
 }
@@ -415,6 +680,7 @@ auth.onAuthStateChanged(user => {
     } else if (user && user.isAnonymous) {
         authUser = user;
         authUid = user.uid;
+        setCookie('guestUid', user.uid, 365);
         if (!getCookie('authUid')) {
             setCookie('authUid', user.uid, 365);
         }
@@ -433,7 +699,6 @@ auth.onAuthStateChanged(user => {
             authBtn.style.color = '';
             authBtn.title = (i18n[currentLang] || i18n.ru).signInTooltip || 'Sign in';
         }
-        auth.signInAnonymously().catch(() => {});
         loadHubFeedback(true);
     }
 });
@@ -493,8 +758,10 @@ if (fbSubmit) {
         try {
             fbSubmit.disabled = true;
             if (fbStatus) { fbStatus.textContent = t.fbSending; fbStatus.style.color = 'var(--md-sys-color-on-surface)'; }
-            // EXACT FIELDS ALLOWED BY FIRESTORE RULES:
-            const currentUid = authUid || getCookie('authUid') || '';
+            if (!auth.currentUser) {
+                await auth.signInAnonymously();
+            }
+            const currentUid = auth.currentUser ? auth.currentUser.uid : (authUid || getCookie('authUid') || '');
             await db.collection(FEEDBACK_HUB_COLLECTION).add({
                 name: name,
                 message: msg,
