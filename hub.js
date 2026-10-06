@@ -14,9 +14,13 @@ function deleteCookie(name) {
 
 // === HTML ESCAPING ===
 function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 // === ЛОКАЛИЗАЦИЯ (i18n) ===
@@ -329,6 +333,14 @@ if (authSubmitBtn) {
             return;
         }
 
+        if (isRegisterMode && nick) {
+            const cleanNick = typeof sanitizeName === 'function' ? sanitizeName(nick) : nick;
+            if (typeof isValidName === 'function' && !isValidName(cleanNick)) {
+                if (authStatus) { authStatus.textContent = t.invalidNickname || 'Недопустимый никнейм'; authStatus.style.color = 'var(--md-sys-color-error)'; }
+                return;
+            }
+        }
+
         try {
             authSubmitBtn.disabled = true;
             if (authStatus) { authStatus.textContent = (isRegisterMode ? (t.creatingAccount || 'Создание аккаунта...') : (t.signingIn || 'Вход...')); authStatus.style.color = 'var(--md-sys-color-on-surface)'; }
@@ -336,8 +348,9 @@ if (authSubmitBtn) {
             if (isRegisterMode) {
                 const cred = await auth.createUserWithEmailAndPassword(email, pass);
                 if (nick) {
-                    setCookie('snakeNick', nick, 365);
-                    await cred.user.updateProfile({ displayName: nick }).catch(() => {});
+                    const cleanNick = typeof sanitizeName === 'function' ? sanitizeName(nick) : nick;
+                    setCookie('snakeNick', cleanNick, 365);
+                    await cred.user.updateProfile({ displayName: cleanNick }).catch(() => {});
                 }
             } else {
                 await auth.signInWithEmailAndPassword(email, pass);
@@ -353,9 +366,17 @@ if (authSubmitBtn) {
 
 if (accNickSave) {
     accNickSave.addEventListener('click', async () => {
-        const nick = (accNickInput?.value || '').trim();
+        const rawNick = (accNickInput?.value || '').trim();
+        const nick = typeof sanitizeName === 'function' ? sanitizeName(rawNick) : rawNick;
         const t = i18n[currentLang] || i18n.ru;
         if (!nick) return;
+        if (typeof isValidName === 'function' && !isValidName(nick)) {
+            if (accNickStatus) {
+                accNickStatus.textContent = t.invalidNickname || 'Недопустимый никнейм';
+                accNickStatus.style.color = 'var(--md-sys-color-error)';
+            }
+            return;
+        }
         setCookie('snakeNick', nick, 365);
         if (authUser) {
             await authUser.updateProfile({ displayName: nick }).catch(() => {});
@@ -456,17 +477,19 @@ if (fbClose) {
 // Send feedback
 if (fbSubmit) {
     fbSubmit.addEventListener('click', async () => {
-        const name = (fbNameInput?.value || '').trim();
-        const msg = (fbMessageInput?.value || '').trim();
+        const rawName = (fbNameInput?.value || '').trim();
+        const rawMsg = (fbMessageInput?.value || '').trim();
         const t = i18n[currentLang] || i18n.ru;
-        if (!name) {
+        if (!rawName) {
             if (fbStatus) { fbStatus.textContent = t.fbNameRequired; fbStatus.style.color = 'var(--md-sys-color-error)'; }
             return;
         }
-        if (msg.length < 3) {
+        if (rawMsg.length < 3) {
             if (fbStatus) { fbStatus.textContent = t.fbMsgShort; fbStatus.style.color = 'var(--md-sys-color-error)'; }
             return;
         }
+        const name = typeof censorProfanity === 'function' ? censorProfanity(rawName) : rawName;
+        const msg = typeof censorProfanity === 'function' ? censorProfanity(rawMsg) : rawMsg;
         try {
             fbSubmit.disabled = true;
             if (fbStatus) { fbStatus.textContent = t.fbSending; fbStatus.style.color = 'var(--md-sys-color-on-surface)'; }
@@ -682,10 +705,12 @@ async function loadComments(entry) {
 async function submitComment(entry) {
     const docId = entry.dataset.id;
     const input = entry.querySelector('.fb-comment-input');
-    const msg = (input.value || '').trim();
-    if (!msg) return;
+    const rawMsg = (input.value || '').trim();
+    if (!rawMsg) return;
+    const msg = typeof censorProfanity === 'function' ? censorProfanity(rawMsg) : rawMsg;
     const t = i18n[currentLang] || i18n.ru;
-    const name = getCookie('snakeNick') || (authUser && authUser.displayName) || t.anonymous;
+    const rawName = getCookie('snakeNick') || (authUser && authUser.displayName) || t.anonymous;
+    const name = typeof censorProfanity === 'function' ? censorProfanity(rawName) : rawName;
     const uid = authUid || getCookie('authUid') || '';
     const list = entry.querySelector('.fb-comments-list');
     const statsBtn = entry.querySelector('.fb-comment-stats');

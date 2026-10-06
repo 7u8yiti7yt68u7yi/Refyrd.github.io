@@ -687,9 +687,13 @@ async function loadLeaderboard() {
 }
 
 function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 let lbLimit = 10;
@@ -704,7 +708,9 @@ lbShowMore.addEventListener('click', () => {
     loadLeaderboard();
 });
 
-setInterval(() => { if (authUid) loadLeaderboard(); }, 5000);
+setInterval(() => {
+    if (authUid && document.visibilityState === 'visible') loadLeaderboard();
+}, 30000);
 
 setInterval(() => {
     if (isRunning && authUid && score > 0) saveScoreToLeaderboard();
@@ -765,9 +771,9 @@ async function loadComments(entry) {
 
 async function submitComment(entry) {
 	const docId = entry.dataset.id;
-	const input = entry.querySelector('.fb-comment-input');
-	const msg = input.value.trim();
-	if (!msg || msg.length < 1) return;
+	const rawMsg = input.value.trim();
+	if (!rawMsg || rawMsg.length < 1) return;
+	const msg = typeof censorProfanity === 'function' ? censorProfanity(rawMsg) : rawMsg;
 	const name = (authUid && savedName && isValidName(savedName)) ? savedName : i18n[currentLang].anonymous;
 	const uid = authUid || getCookie('authUid') || '';
 	const list = entry.querySelector('.fb-comments-list');
@@ -1173,10 +1179,12 @@ fbOverlayClose.addEventListener('click', () => fbOverlay.classList.remove('activ
 fbOverlay.addEventListener('click', e => { if (e.target === fbOverlay) fbOverlay.classList.remove('active'); });
 
 fbSubmit.addEventListener('click', async () => {
-	const name = fbNameInput.value.trim();
-	const message = fbMessageInput.value.trim();
-	if (!name) { fbStatus.textContent = i18n[currentLang].fbNameRequired; fbStatus.style.color = 'var(--md-sys-color-error)'; return; }
-	if (!message || message.length < 3) { fbStatus.textContent = i18n[currentLang].fbMsgShort; fbStatus.style.color = 'var(--md-sys-color-error)'; return; }
+	const rawName = fbNameInput.value.trim();
+	const rawMsg = fbMessageInput.value.trim();
+	if (!rawName) { fbStatus.textContent = i18n[currentLang].fbNameRequired; fbStatus.style.color = 'var(--md-sys-color-error)'; return; }
+	if (!rawMsg || rawMsg.length < 3) { fbStatus.textContent = i18n[currentLang].fbMsgShort; fbStatus.style.color = 'var(--md-sys-color-error)'; return; }
+	const name = typeof censorProfanity === 'function' ? censorProfanity(rawName) : rawName;
+	const message = typeof censorProfanity === 'function' ? censorProfanity(rawMsg) : rawMsg;
 	fbStatus.textContent = i18n[currentLang].fbSending;
 	fbStatus.style.color = '';
 	try {
