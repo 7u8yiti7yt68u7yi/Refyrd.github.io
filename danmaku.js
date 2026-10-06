@@ -194,6 +194,7 @@ let touchY = 0;
 
 // === CONTROLS LISTENERS (Layout-independent via e.code + Cyrillic fallback) ===
 function handleDanmakuKey(e, isDown) {
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
     const code = e.code;
     const k = (e.key || '').toLowerCase();
 
@@ -310,6 +311,14 @@ function getComputedThemeColors() {
 
 // === GAME START / RESET / PAUSE ===
 function startNewGame() {
+    if (typeof playerNameInput !== 'undefined' && playerNameInput) {
+        const val = (typeof sanitizeName === 'function') ? sanitizeName(playerNameInput.value.trim()) : playerNameInput.value.trim();
+        if (val) {
+            savedName = val;
+            setCookie('snakeNick', savedName, 365);
+            localStorage.setItem('danmakuNick', savedName);
+        }
+    }
     score = 0;
     graze = 0;
     lives = 3;
@@ -353,6 +362,7 @@ function gameOver() {
     if (finalTime) finalTime.textContent = Math.floor(gameTime) + 's';
 
     document.getElementById('gameOverScreen').classList.add('active');
+    if (typeof saveScoreToLeaderboard === 'function') saveScoreToLeaderboard();
 }
 
 function togglePause() {
@@ -1495,6 +1505,122 @@ function applyLanguage() {
     if (paletteBtnEl) paletteBtnEl.title = t.paletteTooltip || 'Theme & Palette';
     const modeText = document.getElementById('uiThemeModeText');
     if (modeText) modeText.textContent = isDark ? (t.themeModeDark || 'Dark mode') : (t.themeModeLight || 'Light mode');
+
+    // Leaderboard
+    const lbTitleEl = document.getElementById('lbTitle');
+    if (lbTitleEl) lbTitleEl.innerText = t.lbTitle;
+    const lbShowMoreEl = document.getElementById('lbShowMore');
+    if (lbShowMoreEl) lbShowMoreEl.innerText = lbShowAll ? t.lbShowTop : t.lbShowAll;
+    const lbLoading = document.getElementById('lbLoadingText');
+    if (lbLoading) lbLoading.innerText = t.lbLoading;
+    const pNameInput = document.getElementById('playerNameInput');
+    if (pNameInput) pNameInput.placeholder = t.placeholder;
+
+    // Feedback
+    const fbTitleEl = document.getElementById('fbTitle');
+    if (fbTitleEl) fbTitleEl.innerText = t.fbTitle;
+    const fbWriteBtnEl = document.getElementById('fbWriteBtn');
+    if (fbWriteBtnEl) fbWriteBtnEl.innerText = t.fbWriteBtn;
+    const fbModalTitle = document.querySelector('#fbOverlay .auth-title');
+    if (fbModalTitle) fbModalTitle.innerText = t.fbOverlayTitle;
+    const fbNameInputEl = document.getElementById('fbNameInput');
+    if (fbNameInputEl) fbNameInputEl.placeholder = t.fbNamePlaceholder;
+    const fbMessageInputEl = document.getElementById('fbMessageInput');
+    if (fbMessageInputEl) fbMessageInputEl.placeholder = t.fbMsgPlaceholder;
+    const fbSubmitEl = document.getElementById('fbSubmit');
+    if (fbSubmitEl) fbSubmitEl.innerText = t.fbSubmitBtn;
+
+    // Auth
+    const authTitle = document.getElementById('authTitle');
+    if (authTitle) authTitle.innerText = isRegisterMode ? (t.authRegisterBtn || 'Register') : t.authSignIn;
+    const authEmail = document.getElementById('authEmail');
+    if (authEmail) authEmail.placeholder = t.authEmailPlaceholder || 'Email';
+    const authPassword = document.getElementById('authPassword');
+    if (authPassword) authPassword.placeholder = t.authPassPlaceholder || 'Password';
+    const authRegNick = document.getElementById('authRegNick');
+    if (authRegNick) authRegNick.placeholder = t.authNickPlaceholder || 'Nickname';
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    if (authSubmitBtn) authSubmitBtn.innerText = isRegisterMode ? (t.authRegisterBtn || 'Register') : t.authSignIn;
+    const authToggleRegister = document.getElementById('authToggleRegister');
+    if (authToggleRegister) authToggleRegister.innerText = isRegisterMode ? (t.authSwitchSignIn || 'Already have an account? Sign In') : (t.authSwitchRegister || 'No account? Register');
+    const authDivider = document.getElementById('uiAuthDividerText');
+    if (authDivider) authDivider.textContent = t.or;
+    const authAccountTitle = document.getElementById('authAccountTitle');
+    if (authAccountTitle) authAccountTitle.innerText = t.authAccount;
+    const uiAccLinkedLabel = document.getElementById('uiAccLinkedLabel');
+    if (uiAccLinkedLabel) uiAccLinkedLabel.innerText = t.authLinkedProviders || 'Linked providers';
+    const uiAccLinkAnotherLabel = document.getElementById('uiAccLinkAnotherLabel');
+    if (uiAccLinkAnotherLabel) uiAccLinkAnotherLabel.innerText = t.authLinkAnother || 'Link another';
+    const uiAccNickLabel = document.getElementById('uiAccNickLabel');
+    if (uiAccNickLabel) uiAccNickLabel.innerText = t.authNickname;
+    const accNickInput = document.getElementById('accNickInput');
+    if (accNickInput) accNickInput.placeholder = t.authNickPlaceholder || 'Nickname';
+    const accNickSave = document.getElementById('accNickSave');
+    if (accNickSave) accNickSave.innerText = t.authSave;
+    const authSignOutBtn = document.getElementById('authSignOutBtn');
+    if (authSignOutBtn) authSignOutBtn.innerText = t.authSignOut;
+
+    const uiAuthLinkEmailTitle = document.getElementById('uiAuthLinkEmailTitle');
+    if (uiAuthLinkEmailTitle) uiAuthLinkEmailTitle.innerText = t.authLinkEmail || 'Link Email';
+    const authLinkEmailBack = document.getElementById('authLinkEmailBack');
+    if (authLinkEmailBack) authLinkEmailBack.innerHTML = '&larr; ' + (t.back || 'Back');
+    const authLinkEmail = document.getElementById('authLinkEmail');
+    if (authLinkEmail) authLinkEmail.placeholder = t.authEmailPlaceholder || 'Email';
+    const authLinkPassword = document.getElementById('authLinkPassword');
+    if (authLinkPassword) authLinkPassword.placeholder = t.authPassPlaceholder || 'Password';
+    const authLinkEmailLink = document.getElementById('authLinkEmailLink');
+    if (authLinkEmailLink) authLinkEmailLink.innerText = t.authLinkEmailBtn || 'Link';
+
+    const uiNickPromptTitle = document.getElementById('uiNickPromptTitle');
+    if (uiNickPromptTitle) uiNickPromptTitle.innerText = t.nickPromptTitle || 'Your nickname';
+    const uiNickPromptSubtitle = document.getElementById('uiNickPromptSubtitle');
+    if (uiNickPromptSubtitle) uiNickPromptSubtitle.innerText = t.nickPromptSubtitle || 'Choose a nickname for records and profile';
+    const nickPromptCancel = document.getElementById('nickPromptCancel');
+    if (nickPromptCancel) nickPromptCancel.innerText = t.skipBtn || 'Skip';
+    const nickPromptSave = document.getElementById('nickPromptSave');
+    if (nickPromptSave) nickPromptSave.innerText = t.authSave || 'Save';
+
+    if (typeof renderProviders === 'function') renderProviders();
+    const authBtnEl = document.getElementById('authBtn');
+    if (authBtnEl) authBtnEl.title = (typeof authUser !== 'undefined' && authUser && !authUser.isAnonymous) ? (authUser.displayName || authUser.email || t.authAccount) : (t.signInTooltip || 'Sign in');
+    const lbStatusSpan = document.querySelector('#lbStatus span:last-child');
+    if (lbStatusSpan) lbStatusSpan.textContent = t.online;
+
+    // Cookie banner
+    const cookieTitle = document.getElementById('uiCookieTitle');
+    if (cookieTitle) cookieTitle.innerText = t.cookieTitle;
+    const cookieDesc = document.getElementById('uiCookieDesc');
+    if (cookieDesc) cookieDesc.innerText = t.cookieDesc;
+    const cookieAcceptBtn = document.getElementById('cookieAcceptBtn');
+    if (cookieAcceptBtn) cookieAcceptBtn.innerText = t.cookieAccept;
+    const cookieSettingsBtn = document.getElementById('cookieSettingsBtn');
+    if (cookieSettingsBtn) cookieSettingsBtn.innerText = t.cookieSettings;
+    const cookieModalTitle = document.getElementById('uiCookieModalTitle');
+    if (cookieModalTitle) cookieModalTitle.innerText = t.cookieModalTitle;
+    const cookieEssentialName = document.getElementById('uiCookieEssentialName');
+    if (cookieEssentialName) cookieEssentialName.innerText = t.cookieEssentialName;
+    const cookieEssentialHint = document.getElementById('uiCookieEssentialHint');
+    if (cookieEssentialHint) cookieEssentialHint.innerText = t.cookieEssentialHint;
+    const cookieScoresName = document.getElementById('uiCookieScoresName');
+    if (cookieScoresName) cookieScoresName.innerText = t.cookieScoresName;
+    const cookieScoresHint = document.getElementById('uiCookieScoresHint');
+    if (cookieScoresHint) cookieScoresHint.innerText = t.cookieScoresHint;
+    const cookieSaveBtn = document.getElementById('cookieSaveBtn');
+    if (cookieSaveBtn) cookieSaveBtn.innerText = t.cookieSave;
+
+    // Refresh feedback and leaderboard in DOM
+    document.querySelectorAll('.fb-expand').forEach(el => {
+        const textEl = el.closest('.fb-entry')?.querySelector('.fb-text');
+        el.textContent = textEl && textEl.classList.contains('expanded') ? t.fbShowLess : t.fbShowMore;
+    });
+    document.querySelectorAll('.fb-reply-btn').forEach(el => el.textContent = t.fbReply);
+    document.querySelectorAll('.lb-entry .lb-name').forEach(el => {
+        if (el.textContent === 'Anonymous' || el.textContent === 'Аноним') el.textContent = t.anonymous;
+    });
+    document.querySelectorAll('.fb-comment-stats').forEach(el => {
+        const n = parseInt(el.dataset.count) || 0;
+        if (typeof formatCommentCount === 'function') el.textContent = formatCommentCount(n);
+    });
 }
 
 // Language toggle
@@ -1504,6 +1630,8 @@ if (langToggle) {
         currentLang = currentLang === 'ru' ? 'en' : 'ru';
         setCookie('snakeLang', currentLang);
         applyLanguage();
+        if (typeof loadLeaderboard === 'function') loadLeaderboard();
+        if (typeof loadFeedback === 'function') loadFeedback(true);
     });
 }
 
@@ -1599,7 +1727,1083 @@ if (menuBtn) {
     });
 }
 
+// === FIREBASE LEADERBOARD & FEEDBACK ===
+function deleteCookie(name) {
+    document.cookie = name + '=; path=/; max-age=0; SameSite=Lax';
+}
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBj5Nxq05fVgiTiNJNM17R6xrRjBmB7qDI",
+    authDomain: "refyrdsite.firebaseapp.com",
+    projectId: "refyrdsite",
+    storageBucket: "refyrdsite.firebasestorage.app",
+    messagingSenderId: "37852850018",
+    appId: "1:37852850018:web:56cc3448489f4b9699ee3b"
+};
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = (typeof firebase !== 'undefined') ? firebase.firestore() : null;
+const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
+const LEADERBOARD_COLLECTION = 'danmaku_leaderboard';
+const Fb_COLLECTION = 'danmaku_feedback';
+
+let authUid = null;
+let authUser = null;
+let skipAnonSignIn = false;
+let isRegisterMode = false;
+let savedName = localStorage.getItem('danmakuNick') || getCookie('snakeNick') || '';
+
+// === AUTH UI ===
+const authOverlay = document.getElementById('authOverlay');
+const authClose = document.getElementById('authClose');
+const authBtn = document.getElementById('authBtn');
+const authMainView = document.getElementById('authMainView');
+const authAccountView = document.getElementById('authAccountView');
+const authTitle = document.getElementById('authTitle');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authRegNick = document.getElementById('authRegNick');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authToggleRegister = document.getElementById('authToggleRegister');
+const authGoogle = document.getElementById('authGoogle');
+const authGithub = document.getElementById('authGithub');
+const authStatus = document.getElementById('authStatus');
+
+const accEmail = document.getElementById('accEmail');
+const accProviders = document.getElementById('accProviders');
+const accNickInput = document.getElementById('accNickInput');
+const accNickSave = document.getElementById('accNickSave');
+const accNickStatus = document.getElementById('accNickStatus');
+const authSignOutBtn = document.getElementById('authSignOutBtn');
+
+const authLinkEmailView = document.getElementById('authLinkEmailView');
+const authLinkEmailBack = document.getElementById('authLinkEmailBack');
+const authLinkEmailLink = document.getElementById('authLinkEmailLink');
+const authLinkEmailInput = document.getElementById('authLinkEmail');
+const authLinkPassInput = document.getElementById('authLinkPassword');
+const authLinkEmailStat = document.getElementById('authLinkEmailStatus');
+
+const playerNameInput = document.getElementById('playerNameInput');
+if (playerNameInput) {
+    playerNameInput.value = savedName;
+    playerNameInput.addEventListener('input', () => {
+        if (typeof sanitizeName === 'function') {
+            playerNameInput.value = sanitizeName(playerNameInput.value);
+        }
+        savedName = playerNameInput.value.trim();
+        setCookie('snakeNick', savedName, 365);
+        localStorage.setItem('danmakuNick', savedName);
+        if (authUid && db) {
+            db.collection(LEADERBOARD_COLLECTION).doc(authUid).set({
+                name: savedName && (typeof isValidName !== 'function' || isValidName(savedName)) ? savedName : (i18n[currentLang] || i18n.ru).anonymous
+            }, { merge: true }).catch(() => {});
+        }
+    });
+    playerNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') startNewGame();
+    });
+}
+
+function showStatus(el, msg, isError) {
+    if (!el) return;
+    el.textContent = msg;
+    el.style.color = isError ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-primary)';
+}
+function clearStatus(el) { if (el) el.textContent = ''; }
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function setAuthMode(register) {
+    isRegisterMode = register;
+    const t = i18n[currentLang] || i18n.ru;
+    if (isRegisterMode) {
+        if (authTitle) authTitle.innerText = t.authRegisterBtn || 'Регистрация';
+        if (authRegNick) authRegNick.style.display = 'block';
+        if (authSubmitBtn) authSubmitBtn.innerText = t.authRegisterBtn || 'Зарегистрироваться';
+        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchSignIn || 'Уже есть аккаунт? Войти';
+    } else {
+        if (authTitle) authTitle.innerText = t.authSignIn || 'Войти';
+        if (authRegNick) authRegNick.style.display = 'none';
+        if (authSubmitBtn) authSubmitBtn.innerText = t.authSignIn || 'Войти';
+        if (authToggleRegister) authToggleRegister.innerText = t.authSwitchRegister || 'Нет аккаунта? Зарегистрироваться';
+    }
+    clearStatus(authStatus);
+}
+if (authToggleRegister) authToggleRegister.addEventListener('click', () => setAuthMode(!isRegisterMode));
+
+const NICK_COOLDOWN = 3 * 24 * 60 * 60 * 1000;
+function formatCooldownUntil(timestamp) {
+    const d = new Date(timestamp);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function renderProviders() {
+    if (!authUser || authUser.isAnonymous || !accProviders) return;
+    const methods = (authUser.providerData || []).map(p => p.providerId);
+    const t = i18n[currentLang] || i18n.ru;
+    const provLabel = {
+        'google.com': t.providerGoogle || 'Google',
+        'github.com': t.providerGithub || 'GitHub',
+        'password': t.providerEmail || 'Email'
+    };
+    accProviders.innerHTML = methods.map(id => `<span class="auth-prov-btn badge">${provLabel[id] || id}</span>`).join('');
+    const used = new Set(methods);
+    document.querySelectorAll('#authAccountView .auth-prov-btn[data-prov]').forEach(btn => {
+        const prov = btn.dataset.prov;
+        const target = prov === 'password' ? 'password' : prov + '.com';
+        const labels = {
+            google: t.providerGoogle || 'Google',
+            github: t.providerGithub || 'GitHub',
+            password: t.providerEmail || 'Email'
+        };
+        const label = labels[prov] || prov;
+        const isLinked = used.has(target);
+        btn.disabled = isLinked;
+        btn.textContent = isLinked ? label : '+ ' + label;
+    });
+}
+
+function toggleAccView(showLink) {
+    if (authLinkEmailView) authLinkEmailView.style.display = showLink ? 'flex' : 'none';
+    const accSections = document.querySelectorAll('#authAccountView > .auth-acc-section, #authAccountView > .auth-title, #authAccountView > .auth-info-line, #authAccountView > #authSignOutBtn');
+    accSections.forEach(el => { if (el) el.style.display = showLink ? 'none' : ''; });
+}
+
+document.querySelectorAll('#authAccountView .auth-prov-btn[data-prov]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.disabled || !authUser || !auth) return;
+        const prov = btn.dataset.prov;
+        if (prov === 'password') { toggleAccView(true); return; }
+        const user = auth.currentUser;
+        if (!user) return;
+
+        function handleLink(promise) {
+            const t = i18n[currentLang] || i18n.ru;
+            const pLabel = { google: t.providerGoogle || 'Google', github: t.providerGithub || 'GitHub' }[prov] || prov;
+            promise.then(() => {
+                authUser = auth.currentUser;
+                renderProviders();
+                showStatus(accNickStatus, pLabel + (t.linked || ' привязан!'), false);
+            }).catch(e => {
+                showStatus(accNickStatus, e.code === 'auth/credential-already-in-use' ? (t.alreadyLinked || 'Аккаунт уже привязан') : e.message, true);
+            });
+        }
+
+        if (prov === 'google') handleLink(user.linkWithPopup(new firebase.auth.GoogleAuthProvider()));
+        else if (prov === 'github') handleLink(user.linkWithPopup(new firebase.auth.GithubAuthProvider()));
+    });
+});
+
+if (authLinkEmailBack) authLinkEmailBack.addEventListener('click', () => toggleAccView(false));
+if (authLinkEmailLink) {
+    authLinkEmailLink.addEventListener('click', () => {
+        const t = i18n[currentLang] || i18n.ru;
+        if (!authUser || authUser.isAnonymous || !auth) {
+            showStatus(authLinkEmailStat, t.notLoggedIn || 'Не вошли', true);
+            return;
+        }
+        const email = (authLinkEmailInput?.value || '').trim();
+        const pass = (authLinkPassInput?.value || '');
+        if (!email || !pass) {
+            showStatus(authLinkEmailStat, t.fillEmailPass || 'Заполните email и пароль', true);
+            return;
+        }
+        if (pass.length < 6) {
+            showStatus(authLinkEmailStat, t.passMin6 || 'Пароль минимум 6 символов', true);
+            return;
+        }
+        showStatus(authLinkEmailStat, t.linking || 'Привязка...', false);
+        auth.currentUser.linkWithCredential(firebase.auth.EmailAuthProvider.credential(email, pass)).then(() => {
+            authUser = auth.currentUser;
+            renderProviders();
+            showStatus(accNickStatus, t.emailLinkedSuccess || 'Email успешно привязан!', false);
+            toggleAccView(false);
+            clearStatus(authLinkEmailStat);
+        }).catch(e => {
+            showStatus(authLinkEmailStat, e.code === 'auth/credential-already-in-use' ? (t.emailAlreadyLinked || 'Email уже используется') : e.message, true);
+        });
+    });
+}
+
+function updateAuthUI() {
+    const isLoggedIn = (authUser && !authUser.isAnonymous) || getCookie('isLoggedIn') === '1';
+    const t = i18n[currentLang] || i18n.ru;
+    if (isLoggedIn) {
+        if (authBtn) {
+            authBtn.title = (authUser && (authUser.displayName || authUser.email)) || savedName || getCookie('authEmail') || t.authAccount;
+        }
+        const email = (authUser && (authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : ''))) || getCookie('authEmail') || '';
+        if (accEmail) accEmail.textContent = email;
+        if (accNickInput) accNickInput.value = savedName || (authUser && authUser.displayName) || '';
+        if (authMainView) authMainView.style.display = 'none';
+        if (authAccountView) authAccountView.style.display = 'flex';
+        toggleAccView(false);
+        renderProviders();
+        loadNicknameFromFirestore();
+    } else {
+        if (authBtn) {
+            authBtn.title = t.signInTooltip || 'Войти';
+        }
+        if (authMainView) authMainView.style.display = 'flex';
+        if (authAccountView) authAccountView.style.display = 'none';
+        setAuthMode(false);
+    }
+}
+
+function openAuthModal() {
+    updateAuthUI();
+    if (authOverlay) authOverlay.classList.add('active');
+    if (authBtn) authBtn.classList.add('active');
+}
+function closeAuthModal() {
+    if (authOverlay) authOverlay.classList.remove('active');
+    if (authBtn) authBtn.classList.remove('active');
+}
+if (authBtn) authBtn.addEventListener('click', openAuthModal);
+if (authClose) authClose.addEventListener('click', closeAuthModal);
+if (authOverlay) authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuthModal(); });
+
+if (authSignOutBtn) {
+    authSignOutBtn.addEventListener('click', () => {
+        deleteCookie('authUid');
+        deleteCookie('authEmail');
+        deleteCookie('isLoggedIn');
+        auth?.signOut();
+        closeAuthModal();
+    });
+}
+
+function updateNicknameInputVisibility() {
+    if (playerNameInput) {
+        playerNameInput.style.display = (authUser && !authUser.isAnonymous) ? 'none' : '';
+    }
+}
+
+function loadNicknameFromFirestore() {
+    if (!authUser || authUser.isAnonymous || !db) return;
+    const userRef = db.collection('users').doc(authUser.uid);
+    const t = i18n[currentLang] || i18n.ru;
+    userRef.get().then(doc => {
+        if (doc.exists && doc.data().nickname) {
+            if (accNickInput) accNickInput.value = doc.data().nickname;
+            savedName = doc.data().nickname;
+            if (playerNameInput) playerNameInput.value = savedName;
+            setCookie('snakeNick', savedName, 365);
+        } else if (accNickInput) {
+            accNickInput.value = savedName || '';
+        }
+        const lastChange = doc.exists ? (doc.data().nicknameLastChange || 0) : 0;
+        const remaining = lastChange + NICK_COOLDOWN - Date.now();
+        if (remaining > 0) {
+            if (accNickStatus) {
+                accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(Date.now() + remaining));
+                accNickStatus.style.color = 'var(--md-sys-color-outline)';
+            }
+            if (accNickSave) accNickSave.disabled = true;
+            if (accNickInput) accNickInput.disabled = true;
+        } else {
+            if (accNickStatus) {
+                accNickStatus.textContent = t.cooldownDaysNotice || 'Смена никнейма доступна раз в 3 дня.';
+                accNickStatus.style.color = 'var(--md-sys-color-outline)';
+            }
+            if (accNickSave) accNickSave.disabled = false;
+            if (accNickInput) accNickInput.disabled = false;
+        }
+    }).catch(e => {
+        if (accNickStatus) {
+            accNickStatus.textContent = e.message;
+            accNickStatus.style.color = 'var(--md-sys-color-error)';
+        }
+    });
+}
+
+if (accNickSave) {
+    accNickSave.addEventListener('click', () => {
+        if (!authUser || authUser.isAnonymous || !db) return;
+        const nick = (typeof sanitizeName === 'function') ? sanitizeName(accNickInput.value.trim()) : accNickInput.value.trim();
+        const t = i18n[currentLang] || i18n.ru;
+        if (typeof isValidName === 'function' && !isValidName(nick)) {
+            accNickStatus.textContent = t.invalidNickname || 'Недопустимый никнейм';
+            accNickStatus.style.color = 'var(--md-sys-color-error)';
+            return;
+        }
+        const userRef = db.collection('users').doc(authUser.uid);
+        accNickSave.disabled = true;
+        userRef.get().then(doc => {
+            const lastChange = doc.exists ? (doc.data().nicknameLastChange || 0) : 0;
+            if (Date.now() - lastChange < NICK_COOLDOWN) {
+                accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(lastChange + NICK_COOLDOWN));
+                accNickStatus.style.color = 'var(--md-sys-color-error)';
+                accNickSave.disabled = accNickInput.disabled = true;
+                return;
+            }
+            const now = Date.now();
+            userRef.set({ nickname: nick, nicknameLastChange: now }, { merge: true }).then(() => {
+                savedName = nick;
+                setCookie('snakeNick', savedName);
+                localStorage.setItem('danmakuNick', savedName);
+                if (playerNameInput) playerNameInput.value = savedName;
+                if (authUser.updateProfile) authUser.updateProfile({ displayName: nick }).catch(() => {});
+                accNickStatus.textContent = (t.cantChangeUntil || 'Нельзя сменить до ') + formatCooldownUntil(new Date(now + NICK_COOLDOWN));
+                accNickStatus.style.color = 'var(--md-sys-color-primary)';
+                accNickSave.disabled = accNickInput.disabled = true;
+                if (authUid) db.collection(LEADERBOARD_COLLECTION).doc(authUid).set({ name: savedName }, { merge: true }).catch(() => {});
+                loadLeaderboard();
+            }).catch(e => {
+                accNickSave.disabled = false;
+                accNickStatus.textContent = e.message;
+                accNickStatus.style.color = 'var(--md-sys-color-error)';
+            });
+        }).catch(e => {
+            accNickSave.disabled = false;
+            accNickStatus.textContent = e.message;
+            accNickStatus.style.color = 'var(--md-sys-color-error)';
+        });
+    });
+}
+
+if (authPassword) authPassword.addEventListener('keydown', e => { if (e.key === 'Enter') authSubmitBtn?.click(); });
+if (authEmail) authEmail.addEventListener('keydown', e => { if (e.key === 'Enter') authPassword?.focus(); });
+if (authRegNick) authRegNick.addEventListener('input', () => { if (typeof sanitizeName === 'function') authRegNick.value = sanitizeName(authRegNick.value); });
+
+async function upgradeFromAnonymous(action) {
+    if (auth && auth.currentUser && auth.currentUser.isAnonymous) {
+        skipAnonSignIn = true;
+        const prevUid = auth.currentUser.uid;
+        try {
+            const cred = await action();
+            await syncGuestScoreToUser(cred.user.uid);
+            if (db) await db.collection(LEADERBOARD_COLLECTION).doc(prevUid).delete().catch(() => {});
+            return cred;
+        } finally {
+            skipAnonSignIn = false;
+        }
+    }
+    return action();
+}
+
+if (authSubmitBtn) {
+    authSubmitBtn.addEventListener('click', async () => {
+        if (!auth) return;
+        const email = (authEmail?.value || '').trim();
+        const pass = (authPassword?.value || '');
+        const nick = (typeof sanitizeName === 'function') ? sanitizeName(authRegNick?.value || '').trim() : (authRegNick?.value || '').trim();
+        const t = i18n[currentLang] || i18n.ru;
+
+        if (!email || !pass) {
+            showStatus(authStatus, t.fillAllFields || 'Заполните все поля', true);
+            return;
+        }
+        if (pass.length < 6) {
+            showStatus(authStatus, t.passMin6 || 'Пароль минимум 6 символов', true);
+            return;
+        }
+
+        try {
+            authSubmitBtn.disabled = true;
+            showStatus(authStatus, isRegisterMode ? (t.creatingAccount || 'Создание аккаунта...') : (t.signingIn || 'Вход...'), false);
+
+            if (isRegisterMode) {
+                if (nick && (typeof isValidName !== 'function' || isValidName(nick))) {
+                    savedName = nick;
+                    setCookie('snakeNick', savedName);
+                    localStorage.setItem('danmakuNick', savedName);
+                    if (playerNameInput) playerNameInput.value = savedName;
+                }
+                const cred = await upgradeFromAnonymous(() => auth.createUserWithEmailAndPassword(email, pass));
+                if (cred && cred.user) {
+                    if (nick) {
+                        await cred.user.updateProfile({ displayName: nick }).catch(() => {});
+                        if (db) {
+                            await db.collection('users').doc(cred.user.uid).set({
+                                nickname: nick,
+                                nicknameLastChange: Date.now()
+                            }, { merge: true });
+                            if (authUid) await db.collection(LEADERBOARD_COLLECTION).doc(authUid).set({ name: nick }, { merge: true }).catch(() => {});
+                        }
+                    }
+                }
+            } else {
+                await upgradeFromAnonymous(() => auth.signInWithEmailAndPassword(email, pass));
+            }
+            closeAuthModal();
+        } catch (e) {
+            let msg = e.message;
+            if (e.code === 'auth/user-not-found') msg = t.userNotFound || 'Пользователь не найден';
+            else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = t.wrongPassword || 'Неверный пароль';
+            else if (e.code === 'auth/email-already-in-use') msg = t.emailInUse || 'Email уже используется';
+            showStatus(authStatus, msg, true);
+        } finally {
+            authSubmitBtn.disabled = false;
+        }
+    });
+}
+
+if (authGoogle) {
+    authGoogle.addEventListener('click', () => {
+        if (!auth) return;
+        upgradeFromAnonymous(() => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()))
+            .then(() => closeAuthModal())
+            .catch(e => showStatus(authStatus, e.message, true));
+    });
+}
+if (authGithub) {
+    authGithub.addEventListener('click', () => {
+        if (!auth) return;
+        upgradeFromAnonymous(() => auth.signInWithPopup(new firebase.auth.GithubAuthProvider()))
+            .then(() => closeAuthModal())
+            .catch(e => showStatus(authStatus, e.message, true));
+    });
+}
+
+function promptNickname(user) {
+    const overlay = document.getElementById('nickPromptOverlay');
+    const input = document.getElementById('nickPromptInput');
+    const status = document.getElementById('nickPromptStatus');
+    const cancel = document.getElementById('nickPromptCancel');
+    const save = document.getElementById('nickPromptSave');
+    if (!overlay || !input || !save) return;
+    overlay.classList.add('active');
+    input.value = savedName || user.displayName || '';
+    input.focus();
+
+    const finish = (nick) => {
+        overlay.classList.remove('active');
+        if (nick) {
+            savedName = nick;
+            setCookie('snakeNick', savedName, 365);
+            localStorage.setItem('danmakuNick', savedName);
+            if (playerNameInput) playerNameInput.value = savedName;
+            if (accNickInput) accNickInput.value = savedName;
+            if (db) {
+                db.collection('users').doc(user.uid).set({ nickname: nick, nicknameLastChange: Date.now() }, { merge: true }).catch(() => {});
+                if (authUid) db.collection(LEADERBOARD_COLLECTION).doc(authUid).set({ name: nick }, { merge: true }).catch(() => {});
+            }
+            loadLeaderboard();
+        }
+    };
+
+    save.onclick = () => {
+        const nick = (typeof sanitizeName === 'function') ? sanitizeName(input.value.trim()) : input.value.trim();
+        const t = i18n[currentLang] || i18n.ru;
+        if (!nick || (typeof isValidName === 'function' && !isValidName(nick))) {
+            showStatus(status, t.invalidNickname || 'Недопустимый никнейм', true);
+            return;
+        }
+        finish(nick);
+    };
+    if (cancel) cancel.onclick = () => finish('');
+}
+
+if (auth) {
+    auth.onAuthStateChanged(async user => {
+        if (user) {
+            authUser = user;
+            authUid = user.uid;
+            setCookie('authUid', authUid, 365);
+            if (!user.isAnonymous) {
+                setCookie('isLoggedIn', '1', 365);
+                if (user.email) setCookie('authEmail', user.email, 365);
+                if (db) {
+                    try {
+                        const userDoc = await db.collection('users').doc(user.uid).get();
+                        if (userDoc.exists && userDoc.data().nickname) {
+                            savedName = userDoc.data().nickname;
+                            setCookie('snakeNick', savedName, 365);
+                            localStorage.setItem('danmakuNick', savedName);
+                            if (playerNameInput) playerNameInput.value = savedName;
+                        } else if (!savedName) {
+                            promptNickname(user);
+                        }
+                    } catch (_) {}
+                }
+            } else {
+                setCookie('guestUid', authUid, 365);
+            }
+        } else {
+            authUser = null;
+            authUid = null;
+            if (!skipAnonSignIn) {
+                try {
+                    await auth.signInAnonymously();
+                } catch (e) {
+                    console.warn('Anonymous sign-in error:', e);
+                }
+            }
+        }
+        updateAuthUI();
+        updateNicknameInputVisibility();
+        loadLeaderboard();
+        loadFeedback(true);
+    });
+}
+
+// === LEADERBOARD SYSTEM (DANMAKU_LEADERBOARD) ===
+async function syncGuestScoreToUser(targetUid) {
+    if (!targetUid || !db) return;
+    const localBest = parseInt(localStorage.getItem('danmakuHighScore') || '0', 10);
+    const guestUid = getCookie('guestUid');
+    let guestScore = 0;
+    if (guestUid && guestUid !== targetUid) {
+        try {
+            const guestDoc = await db.collection(LEADERBOARD_COLLECTION).doc(guestUid).get();
+            if (guestDoc.exists) guestScore = guestDoc.data().score || 0;
+        } catch (_) {}
+    }
+    const finalScore = Math.max(localBest, guestScore, score);
+    if (finalScore > 0) {
+        try {
+            const userLbRef = db.collection(LEADERBOARD_COLLECTION).doc(targetUid);
+            const userLbDoc = await userLbRef.get();
+            const curScore = userLbDoc.exists ? (userLbDoc.data().score || 0) : 0;
+            const myNick = savedName || getCookie('snakeNick') || authUser?.displayName || (i18n[currentLang] || i18n.ru).anonymous;
+            if (finalScore > curScore) {
+                await userLbRef.set({ name: myNick, score: finalScore }, { merge: true });
+                highScore = finalScore;
+                localStorage.setItem('danmakuHighScore', highScore);
+            }
+        } catch (e) {
+            console.warn('Sync score error:', e);
+        }
+    }
+}
+
+let lastScoreSaveTime = 0;
+async function saveScoreToLeaderboard() {
+    if (score <= 0 || !authUid || !db) return;
+    if (score > 10000000) return;
+    const now = Date.now();
+    if (now - lastScoreSaveTime < 2000) return;
+    lastScoreSaveTime = now;
+    const t = i18n[currentLang] || i18n.ru;
+    const displayName = savedName && (typeof isValidName !== 'function' || isValidName(savedName)) ? savedName : t.anonymous;
+    try {
+        const docRef = db.collection(LEADERBOARD_COLLECTION).doc(authUid);
+        const existing = await docRef.get();
+        const existingScore = existing.exists ? (existing.data().score || 0) : 0;
+        const existingName = existing.exists ? (existing.data().name || '') : '';
+
+        if (score <= existingScore && displayName === existingName) {
+            loadLeaderboard();
+            return;
+        }
+
+        await docRef.set({
+            name: displayName,
+            score: Math.max(score, existingScore)
+        }, { merge: true });
+    } catch (e) {
+        console.warn('Firebase save score error:', e);
+    }
+    loadLeaderboard();
+}
+
+let lbLimit = 10;
+let lbShowAll = false;
+let _lbLangAtStart = '';
+async function loadLeaderboard() {
+    if (!db) return;
+    const leaderboardList = document.getElementById('leaderboardList');
+    if (!leaderboardList) return;
+    _lbLangAtStart = currentLang;
+    const t = i18n[currentLang] || i18n.ru;
+    try {
+        const snapshot = await db.collection(LEADERBOARD_COLLECTION)
+            .orderBy('score', 'desc')
+            .limit(lbLimit)
+            .get();
+        if (currentLang !== _lbLangAtStart) return;
+        setLbStatus('online', t.online);
+        if (snapshot.empty) {
+            leaderboardList.innerHTML = `<div class="lb-empty">${t.lbNoScores}</div>`;
+            return;
+        }
+        let html = '';
+        let rank = 1;
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+            html += `<div class="lb-entry">
+                <span class="lb-rank">${medal || rank}</span>
+                <span class="lb-name">${escapeHtml(d.name && d.name.trim() ? d.name : t.anonymous)}</span>
+                <span class="lb-score">${(d.score || 0).toLocaleString()}</span>
+            </div>`;
+            rank++;
+        });
+        leaderboardList.innerHTML = html;
+    } catch (e) {
+        if (currentLang !== _lbLangAtStart) return;
+        console.warn('Firebase load lb error:', e);
+        setLbStatus('error', (t.errorPrefix || 'Error: ') + e.message);
+        leaderboardList.innerHTML = `<div class="lb-empty">${t.lbOffline}</div>`;
+    }
+}
+
+function setLbStatus(state, msg) {
+    const lbStatus = document.getElementById('lbStatus');
+    if (lbStatus) lbStatus.innerHTML = `<span class="dot ${state}"></span><span>${escapeHtml(msg)}</span>`;
+}
+
+const lbShowMore = document.getElementById('lbShowMore');
+if (lbShowMore) {
+    lbShowMore.addEventListener('click', () => {
+        lbShowAll = !lbShowAll;
+        lbLimit = lbShowAll ? 1000 : 10;
+        const t = i18n[currentLang] || i18n.ru;
+        lbShowMore.innerText = lbShowAll ? t.lbShowTop : t.lbShowAll;
+        const leaderboardList = document.getElementById('leaderboardList');
+        if (leaderboardList) leaderboardList.innerHTML = `<div class="lb-loading">${t.lbLoading}</div>`;
+        document.getElementById('leaderboard')?.classList.toggle('lb-show-all', lbShowAll);
+        loadLeaderboard();
+    });
+}
+
+setInterval(() => {
+    if (authUid && document.visibilityState === 'visible') loadLeaderboard();
+}, 30000);
+
+setInterval(() => {
+    if (gameState === 'playing' && authUid && score > 0) saveScoreToLeaderboard();
+}, 4000);
+
+// === FEEDBACK SYSTEM (DANMAKU_FEEDBACK) ===
+const fbList = document.getElementById('feedbackList');
+const fbWriteBtn = document.getElementById('fbWriteBtn');
+const fbOverlay = document.getElementById('fbOverlay');
+const fbOverlayClose = document.getElementById('fbOverlayClose');
+const fbNameInput = document.getElementById('fbNameInput');
+const fbMessageInput = document.getElementById('fbMessageInput');
+const fbSubmit = document.getElementById('fbSubmit');
+const fbStatus = document.getElementById('fbStatus');
+
+function updateFbNameField() {
+    if (!fbNameInput) return;
+    const hasName = savedName && (typeof isValidName !== 'function' || isValidName(savedName));
+    fbNameInput.value = hasName ? savedName : '';
+    fbNameInput.disabled = !!hasName;
+    const t = i18n[currentLang] || i18n.ru;
+    fbNameInput.placeholder = hasName ? '' : t.fbNamePlaceholder;
+}
+
+function formatCommentCount(n) {
+    const t = i18n[currentLang] || i18n.ru;
+    if (currentLang === 'ru') {
+        if (n % 10 === 1 && n % 100 !== 11) return n + ' ответ';
+        if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return n + ' ответа';
+        return n + ' ответов';
+    }
+    return n + ' ' + (n === 1 ? (t.fbReplyOne || 'reply') : (t.fbReplyFew || 'replies'));
+}
+
+async function loadComments(entry) {
+    if (!db) return;
+    const docId = entry.dataset.id;
+    const list = entry.querySelector('.fb-comments-list');
+    const statsBtn = entry.querySelector('.fb-comment-stats');
+    const t = i18n[currentLang] || i18n.ru;
+    try {
+        const snap = await db.collection(Fb_COLLECTION).doc(docId).collection('comments').orderBy('time', 'asc').limit(20).get();
+        if (snap.empty) {
+            list.innerHTML = `<div class="lb-empty">${t.fbNoComments}</div>`;
+            statsBtn.style.display = 'none';
+            return;
+        }
+        const myUid = authUid || getCookie('authUid') || '';
+        let html = '';
+        let count = 0;
+        snap.forEach(doc => {
+            const d = doc.data();
+            const ct = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
+            const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+            html += `<div class="fb-comment" data-cid="${doc.id}">
+                <span class="fb-comment-name">${escapeHtml(d.name || t.anonymous)}</span>
+                <span class="fb-comment-msg">${escapeHtml(d.message)}</span>
+                <span class="fb-time">${ct}</span>
+                ${isOwner ? '<button class="fb-comment-edit">✎</button><button class="fb-comment-del">✕</button>' : ''}
+            </div>`;
+            count++;
+        });
+        list.innerHTML = html;
+        statsBtn.textContent = formatCommentCount(count);
+        statsBtn.style.display = '';
+    } catch (_) {
+        list.innerHTML = `<div class="lb-empty">${t.fbLoadFail}</div>`;
+    }
+}
+
+async function submitComment(entry) {
+    if (!db) return;
+    const input = entry.querySelector('.fb-comment-input');
+    if (!input) return;
+    const rawMsg = input.value.trim();
+    if (!rawMsg || rawMsg.length < 1) return;
+    const msg = typeof censorProfanity === 'function' ? censorProfanity(rawMsg) : rawMsg;
+    const t = i18n[currentLang] || i18n.ru;
+    const name = (authUid && savedName && (typeof isValidName !== 'function' || isValidName(savedName))) ? savedName : t.anonymous;
+    const uid = authUid || getCookie('authUid') || '';
+    const docId = entry.dataset.id;
+
+    input.value = '';
+    input.disabled = true;
+
+    try {
+        await db.collection(Fb_COLLECTION).doc(docId).collection('comments').add({
+            name, message: msg, uid,
+            time: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection(Fb_COLLECTION).doc(docId).update({
+            commentCount: firebase.firestore.FieldValue.increment(1)
+        });
+        await loadComments(entry);
+    } catch (_) {}
+    input.disabled = false;
+}
+
+async function deleteFeedback(docId) {
+    if (!docId || !db) return;
+    const confirmMsg = currentLang === 'ru' ? 'Удалить этот отзыв?' : 'Delete this feedback?';
+    if (!confirm(confirmMsg)) return;
+    const entry = fbList ? fbList.querySelector(`.fb-entry[data-id="${docId}"]`) : null;
+    if (entry) entry.remove();
+    try {
+        await db.collection(Fb_COLLECTION).doc(docId).delete();
+        loadFeedback(true);
+    } catch (e) {
+        console.error('Error deleting feedback:', e);
+        loadFeedback(true);
+    }
+}
+
+async function deleteComment(entry, cid) {
+    if (!cid || !db) return;
+    const docId = entry.dataset.id;
+    const commentEl = entry.querySelector(`[data-cid="${cid}"]`);
+    if (commentEl) commentEl.remove();
+    try {
+        await db.collection(Fb_COLLECTION).doc(docId).collection('comments').doc(cid).delete();
+        await db.collection(Fb_COLLECTION).doc(docId).update({
+            commentCount: firebase.firestore.FieldValue.increment(-1)
+        });
+    } catch (_) {}
+}
+
+const _votingLock = {};
+const _recentVotes = {};
+async function voteFeedback(docId, type) {
+    if (!db) return;
+    const voteKey = authUid;
+    if (!voteKey) return;
+    if (_votingLock[docId]) return;
+    _votingLock[docId] = true;
+    const now = Date.now();
+    Object.keys(_recentVotes).forEach(k => { if (now - _recentVotes[k] > 30000) delete _recentVotes[k]; });
+    _recentVotes[docId] = now;
+    const entry = document.querySelector(`.fb-entry[data-id="${docId}"]`);
+    if (!entry) { _votingLock[docId] = false; delete _recentVotes[docId]; return; }
+    const likeBtn = entry.querySelector('.fb-like');
+    const dislikeBtn = entry.querySelector('.fb-dislike');
+    const likeCount = likeBtn.querySelector('span');
+    const dislikeCount = dislikeBtn.querySelector('span');
+    const wasLiked = likeBtn.classList.contains('active');
+    const wasDisliked = dislikeBtn.classList.contains('active');
+    const prevLikes = parseInt(likeCount.textContent) || 0;
+    const prevDislikes = parseInt(dislikeCount.textContent) || 0;
+
+    if (type === 'like') {
+        if (wasLiked) { likeBtn.classList.remove('active'); likeCount.textContent = prevLikes - 1; }
+        else { likeBtn.classList.add('active'); likeCount.textContent = prevLikes + 1;
+            if (wasDisliked) { dislikeBtn.classList.remove('active'); dislikeCount.textContent = prevDislikes - 1; } }
+    } else {
+        if (wasDisliked) { dislikeBtn.classList.remove('active'); dislikeCount.textContent = prevDislikes - 1; }
+        else { dislikeBtn.classList.add('active'); dislikeCount.textContent = prevDislikes + 1;
+            if (wasLiked) { likeBtn.classList.remove('active'); likeCount.textContent = prevLikes - 1; } }
+    }
+
+    const ref = db.collection(Fb_COLLECTION).doc(docId);
+    const voteRef = ref.collection('votes').doc(voteKey);
+    try {
+        const voteDoc = await voteRef.get();
+        const existingType = voteDoc.exists ? voteDoc.data().type : '';
+        const batch = db.batch();
+        if (existingType === type) {
+            batch.delete(voteRef);
+            batch.update(ref, { [type + 's']: firebase.firestore.FieldValue.increment(-1) });
+        } else {
+            batch.set(voteRef, {
+                userId: voteKey, type, feedbackId: docId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            if (existingType) batch.update(ref, { [existingType + 's']: firebase.firestore.FieldValue.increment(-1) });
+            batch.update(ref, { [type + 's']: firebase.firestore.FieldValue.increment(1) });
+        }
+        await batch.commit();
+        const cache = JSON.parse(localStorage.getItem('danmakuFbVotes') || '{}');
+        if (existingType === type) delete cache[docId];
+        else cache[docId] = type;
+        localStorage.setItem('danmakuFbVotes', JSON.stringify(cache));
+    } catch (e) {
+        likeBtn.classList.toggle('active', wasLiked);
+        dislikeBtn.classList.toggle('active', wasDisliked);
+        likeCount.textContent = prevLikes;
+        dislikeCount.textContent = prevDislikes;
+    }
+    _votingLock[docId] = false;
+    delete _recentVotes[docId];
+}
+
+let _fbLangAtStart = '';
+async function loadFeedback(silent) {
+    if (!db || !fbList) return;
+    _fbLangAtStart = currentLang;
+    const t = i18n[currentLang] || i18n.ru;
+    if (!silent) fbList.innerHTML = `<div class="lb-loading">${t.lbLoading}</div>`;
+    try {
+        const snap = await db.collection(Fb_COLLECTION).orderBy('time', 'desc').limit(50).get();
+        if (currentLang !== _fbLangAtStart) return;
+        if (snap.empty) {
+            fbList.innerHTML = `<div class="lb-empty">${t.fbNoFeedback}</div>`;
+            return;
+        }
+        const feedbackIds = [];
+        snap.forEach(doc => feedbackIds.push(doc.id));
+        const userVotes = {};
+        try {
+            const cached = JSON.parse(localStorage.getItem('danmakuFbVotes') || '{}');
+            Object.keys(cached).forEach(id => { if (feedbackIds.includes(id)) userVotes[id] = cached[id]; });
+        } catch (_) {}
+        const myUid = authUid || getCookie('authUid') || '';
+        let html = '';
+        snap.forEach(doc => {
+            const d = doc.data();
+            const id = doc.id;
+            const time = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
+            const userVote = userVotes[id] || '';
+            const likes = d.likes ?? d.likeCount ?? 0;
+            const dislikes = d.dislikes ?? d.dislikeCount ?? 0;
+            const msg = escapeHtml(d.message);
+            const long = msg.length > 100;
+            const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+            html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
+                ${isOwner ? `<button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>` : ''}
+                <div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
+                <div class="fb-expand-row">
+                    ${long ? '<button class="fb-expand">' + t.fbShowMore + '</button>' : ''}
+                    ${long ? '<span class="fb-sep">·</span>' : ''}
+                    <button class="fb-reply-btn">${t.fbReply}</button>
+                </div>
+                <div class="fb-actions">
+                    <button class="fb-like${userVote === 'like' ? ' active' : ''}">👍 <span>${likes}</span></button>
+                    <button class="fb-dislike${userVote === 'dislike' ? ' active' : ''}">👎 <span>${dislikes}</span></button>
+                </div>
+                <button class="fb-comment-stats" data-count="${d.commentCount ?? 0}"${d.commentCount ? '' : ' style="display:none"'}>${formatCommentCount(d.commentCount ?? 0)}</button>
+                <div class="fb-time">${escapeHtml(d.name || t.anonymous)} · ${time}</div>
+                <div class="fb-comments" style="display:none">
+                    <div class="fb-comments-header"><button class="fb-comments-close">✕</button></div>
+                    <div class="fb-comments-list"></div>
+                    <div class="fb-comment-form">
+                        <input class="fb-comment-input" placeholder="${t.fbWriteComment}">
+                        <button class="fb-comment-send">${t.fbSendComment}</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+        fbList.innerHTML = html;
+        if (authUid) {
+            const voteResults = await Promise.allSettled(
+                feedbackIds.map(id => db.collection(Fb_COLLECTION).doc(id).collection('votes').doc(authUid).get())
+            );
+            const fbVotes = {};
+            voteResults.forEach((r, i) => {
+                if (r.status === 'fulfilled' && r.value.exists) fbVotes[feedbackIds[i]] = r.value.data().type;
+            });
+            feedbackIds.forEach(id => {
+                const entry = fbList.querySelector(`.fb-entry[data-id="${id}"]`);
+                if (!entry || _recentVotes[id]) return;
+                const likeBtn = entry.querySelector('.fb-like');
+                const dislikeBtn = entry.querySelector('.fb-dislike');
+                if (fbVotes[id]) {
+                    likeBtn?.classList.toggle('active', fbVotes[id] === 'like');
+                    dislikeBtn?.classList.toggle('active', fbVotes[id] === 'dislike');
+                }
+            });
+            try { localStorage.setItem('danmakuFbVotes', JSON.stringify(fbVotes)); } catch (_) {}
+        }
+    } catch (e) {
+        if (currentLang !== _fbLangAtStart) return;
+        fbList.innerHTML = `<div class="lb-empty">${t.fbLoadFail}</div>`;
+    }
+}
+
+if (fbList) {
+    fbList.addEventListener('click', (e) => {
+        const fbDelBtn = e.target.closest('.fb-del-btn');
+        if (fbDelBtn) {
+            const entry = fbDelBtn.closest('.fb-entry');
+            if (entry) deleteFeedback(entry.dataset.id);
+            return;
+        }
+        const expandBtn = e.target.closest('.fb-expand');
+        if (expandBtn) {
+            const entry = expandBtn.closest('.fb-entry');
+            if (!entry) return;
+            const textEl = entry.querySelector('.fb-text');
+            textEl.classList.toggle('expanded');
+            textEl.classList.toggle('collapsed');
+            const t = i18n[currentLang] || i18n.ru;
+            expandBtn.textContent = textEl.classList.contains('expanded') ? t.fbShowLess : t.fbShowMore;
+            return;
+        }
+        const voteBtn = e.target.closest('.fb-like, .fb-dislike');
+        if (voteBtn) {
+            const entry = voteBtn.closest('.fb-entry');
+            if (!entry) return;
+            const docId = entry.dataset.id;
+            const type = voteBtn.classList.contains('fb-like') ? 'like' : 'dislike';
+            voteFeedback(docId, type);
+            return;
+        }
+        const replyBtn = e.target.closest('.fb-reply-btn');
+        if (replyBtn) {
+            const entry = replyBtn.closest('.fb-entry');
+            if (!entry) return;
+            const section = entry.querySelector('.fb-comments');
+            section.style.display = '';
+            if (!section.dataset.loaded) { section.dataset.loaded = '1'; loadComments(entry); }
+            entry.querySelector('.fb-comment-input')?.focus();
+            return;
+        }
+        const statsBtn = e.target.closest('.fb-comment-stats');
+        if (statsBtn) {
+            const entry = statsBtn.closest('.fb-entry');
+            if (!entry) return;
+            const section = entry.querySelector('.fb-comments');
+            if (section.style.display === 'none') {
+                section.style.display = '';
+                if (!section.dataset.loaded) { section.dataset.loaded = '1'; loadComments(entry); }
+            } else {
+                section.style.display = 'none';
+            }
+            return;
+        }
+        const sendBtn = e.target.closest('.fb-comment-send');
+        if (sendBtn) {
+            const entry = sendBtn.closest('.fb-entry');
+            if (entry) submitComment(entry);
+            return;
+        }
+        const delCommentBtn = e.target.closest('.fb-comment-del');
+        if (delCommentBtn) {
+            const comment = delCommentBtn.closest('.fb-comment');
+            const entry = comment?.closest('.fb-entry');
+            if (entry && comment) deleteComment(entry, comment.dataset.cid);
+            return;
+        }
+        const closeBtn = e.target.closest('.fb-comments-close');
+        if (closeBtn) {
+            const section = closeBtn.closest('.fb-comments');
+            if (section) section.style.display = 'none';
+        }
+    });
+
+    fbList.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const input = e.target.closest('.fb-comment-input');
+            if (input) {
+                const entry = input.closest('.fb-entry');
+                if (entry) submitComment(entry);
+            }
+        }
+    });
+}
+
+if (fbWriteBtn) {
+    fbWriteBtn.addEventListener('click', () => {
+        updateFbNameField();
+        if (fbMessageInput) fbMessageInput.value = '';
+        if (fbStatus) fbStatus.textContent = '';
+        if (fbOverlay) fbOverlay.classList.add('active');
+    });
+}
+if (fbOverlayClose) fbOverlayClose.addEventListener('click', () => fbOverlay?.classList.remove('active'));
+if (fbOverlay) fbOverlay.addEventListener('click', e => { if (e.target === fbOverlay) fbOverlay.classList.remove('active'); });
+
+if (fbSubmit) {
+    fbSubmit.addEventListener('click', async () => {
+        const rawName = (fbNameInput?.value || '').trim();
+        const rawMsg = (fbMessageInput?.value || '').trim();
+        const t = i18n[currentLang] || i18n.ru;
+        if (!rawName) { showStatus(fbStatus, t.fbNameRequired, true); return; }
+        if (!rawMsg || rawMsg.length < 3) { showStatus(fbStatus, t.fbMsgShort, true); return; }
+        const name = typeof censorProfanity === 'function' ? censorProfanity(rawName) : rawName;
+        const message = typeof censorProfanity === 'function' ? censorProfanity(rawMsg) : rawMsg;
+        showStatus(fbStatus, t.fbSending, false);
+        try {
+            if (auth && !auth.currentUser) await auth.signInAnonymously();
+            const currentUid = auth?.currentUser ? auth.currentUser.uid : (authUid || getCookie('authUid') || '');
+            await db.collection(Fb_COLLECTION).add({
+                name, message, uid: currentUid,
+                time: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            if (name !== savedName) {
+                savedName = name;
+                setCookie('snakeNick', savedName, 365);
+                localStorage.setItem('danmakuNick', savedName);
+                if (playerNameInput) playerNameInput.value = savedName;
+            }
+            showStatus(fbStatus, t.fbSent, false);
+            setTimeout(() => {
+                if (fbOverlay) fbOverlay.classList.remove('active');
+                loadFeedback(true);
+            }, 800);
+        } catch (e) {
+            showStatus(fbStatus, e.message, true);
+        }
+    });
+}
+
+// === COOKIE BANNER ===
+function initCookieBanner() {
+    const banner = document.getElementById('cookieBanner');
+    const modal = document.getElementById('cookieModal');
+    if (!banner) return;
+    const consent = getCookie('cookieConsent');
+    if (!consent) banner.style.display = 'flex';
+    const acceptBtn = document.getElementById('cookieAcceptBtn');
+    const settingsBtn = document.getElementById('cookieSettingsBtn');
+    const modalClose = document.getElementById('cookieModalClose');
+    const saveBtn = document.getElementById('cookieSaveBtn');
+    const scoresPref = document.getElementById('cookieScoresPref');
+
+    if (acceptBtn) acceptBtn.addEventListener('click', () => {
+        setCookie('cookieConsent', 'all', 365);
+        banner.style.display = 'none';
+    });
+    if (settingsBtn) settingsBtn.addEventListener('click', () => {
+        if (modal) modal.classList.add('active');
+    });
+    if (modalClose) modalClose.addEventListener('click', () => {
+        if (modal) modal.classList.remove('active');
+    });
+    if (saveBtn) saveBtn.addEventListener('click', () => {
+        const allowScores = scoresPref ? scoresPref.checked : true;
+        setCookie('cookieConsent', allowScores ? 'all' : 'essential', 365);
+        if (modal) modal.classList.remove('active');
+        banner.style.display = 'none';
+    });
+}
+
 // Initialize on load
 applyTheme();
 applyColor(activeColor);
 applyLanguage();
+initCookieBanner();
