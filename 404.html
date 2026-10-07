@@ -6,7 +6,9 @@
     <script>
         var path = (window.location.pathname || '').toLowerCase();
         if (path.includes('snake')) {
-            window.location.replace('/Snake.html');
+            window.location.replace('/snake');
+        } else if (path.includes('bullet') || path.includes('danmaku') || path.includes('hell')) {
+            window.location.replace('/bullet-hell');
         } else {
             window.location.replace('/');
         }

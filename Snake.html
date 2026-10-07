@@ -32,6 +32,12 @@
                     document.body.setAttribute('data-color', color);
                 }
             });
+
+            if (window.history && window.history.replaceState && window.location.protocol !== 'file:') {
+                if (window.location.pathname.toLowerCase().includes('snake')) {
+                    window.history.replaceState(null, '', '/snake');
+                }
+            }
         })();
     </script>
 </head>

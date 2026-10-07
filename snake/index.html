@@ -1,42 +1,41 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Danmaku Hell — Refyrd</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RefyrdSnake</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Google+Sans+Flex:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="../style.css?v=9">
     <script>
         (function() {
-            function getCookie(name) {
-                const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-                return match ? decodeURIComponent(match[2]) : null;
+            var match = document.cookie.match(/(^| )snakeTheme=([^;]+)/);
+            var theme = match ? decodeURIComponent(match[2]) : null;
+            if (!theme) {
+                theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
             }
-            const savedTheme = getCookie('snakeTheme');
-            const theme = (savedTheme === 'dark' || savedTheme === 'light') 
-                ? savedTheme 
-                : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', theme);
-            
-            const savedColor = getCookie('snakeColor') || 'neutral';
-            document.documentElement.setAttribute('data-color', savedColor);
 
-            document.addEventListener('DOMContentLoaded', () => {
+            var cMatch = document.cookie.match(/(^| )snakeColor=([^;]+)/);
+            var color = cMatch ? decodeURIComponent(cMatch[2]) : 'neutral';
+            document.documentElement.setAttribute('data-color', color);
+
+            document.addEventListener('DOMContentLoaded', function() {
                 if (document.body) {
                     document.body.setAttribute('data-theme', theme);
-                    document.body.setAttribute('data-color', savedColor);
+                    document.body.setAttribute('data-color', color);
                 }
             });
 
             if (window.history && window.history.replaceState && window.location.protocol !== 'file:') {
-                if (window.location.pathname.toLowerCase().includes('danmaku') || window.location.pathname.toLowerCase().includes('bullet')) {
-                    window.history.replaceState(null, '', '/bullet-hell');
+                if (window.location.pathname !== '/snake') {
+                    window.history.replaceState(null, '', '/snake');
                 }
             }
         })();
@@ -54,10 +53,10 @@
     <div class="header">
         <div class="header-left">
             <div class="score-box">
-                <div class="score-title" id="uiScoreTitle">СЧЕТ</div>
+                <div class="score-title" id="uiScoreTitle">Счет</div>
                 <div class="score-value" id="score">0</div>
             </div>
-            <button class="icon-btn" id="authBtn" title="Войти">
+            <button class="icon-btn" id="authBtn" title="Sign in">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </button>
         </div>
@@ -65,50 +64,51 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
         </a>
         <div class="header-actions">
-            <button class="icon-btn" id="langToggle">RU</button>
+            <button class="icon-btn" id="langToggle">EN</button>
             <div class="palette-dropdown-wrapper">
-                <button class="icon-btn" id="paletteBtn" title="Тема и Палитра">
+                <button class="icon-btn" id="paletteBtn" title="Theme & Palette">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.49 2 2 6.49 2 12c0 4.41 3.59 8 8 8h1.5c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 8 6.5 8s1.5.67 1.5 1.5S7.33 11 6.5 11zm3-4C8.67 7 8 6.33 8 5.5S8.67 4 9.5 4s1.5.67 1.5 1.5S10.33 7 9.5 7zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 4 14.5 4s1.5.67 1.5 1.5S15.33 7 14.5 7zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 8 17.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
                 </button>
                 <div class="palette-popover" id="palettePopover">
-                    <button class="theme-mode-btn" id="themeModeToggle" title="Светлая / Темная тема">
-                        <svg id="themeModeIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 000 1.41l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
-                        <span id="uiThemeModeText">Темная</span>
+                    <button class="theme-mode-btn" id="themeModeToggle" title="Light / Dark mode">
+                        <svg id="themeModeIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 000-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+                        <span id="uiThemeModeText">Dark mode</span>
                     </button>
                     <div class="color-picker">
-                        <button class="color-btn" data-c="neutral" style="background-color: #4a5c68;" title="Нейтральная"></button>
-                        <button class="color-btn" data-c="green" style="background-color: #4CAF50;" title="Зеленая"></button>
-                        <button class="color-btn" data-c="blue" style="background-color: #2196F3;" title="Синяя"></button>
-                        <button class="color-btn" data-c="red" style="background-color: #F44336;" title="Красная"></button>
-                        <button class="color-btn" data-c="purple" style="background-color: #9C27B0;" title="Фиолетовая"></button>
+                        <button class="color-btn" data-c="neutral" style="background-color: #4a5c68;" title="Neutral"></button>
+                        <button class="color-btn" data-c="green" style="background-color: #4CAF50;" title="Green"></button>
+                        <button class="color-btn" data-c="blue" style="background-color: #2196F3;" title="Blue"></button>
+                        <button class="color-btn" data-c="red" style="background-color: #F44336;" title="Red"></button>
+                        <button class="color-btn" data-c="purple" style="background-color: #9C27B0;" title="Purple"></button>
                     </div>
                 </div>
             </div>
-            <a href="index.html" class="icon-btn" id="homeBtn" title="На главную" aria-label="На главную">
+            <a href="../" class="icon-btn" id="homeBtn" title="All games" aria-label="All games">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             </a>
         </div>
     </div>
 
-    <div class="game-container danmaku-container" id="gameContainer">
+    <div class="game-container" id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         
         <div class="overlay active" id="startMenu">
             <div class="menu-inner">
-                <div class="menu-title" id="uiMainTitle" style="letter-spacing: 0.08em;">ДАНМАКУ ХЕЛЛ</div>
+                <div class="menu-title" id="uiMainTitle">ЗМЕЙКА</div>
                 <div class="high-score" id="menuHighScoreText">Лучший счет: 0</div>
                 <div class="last-score" id="menuLastScoreText">Последний счет: 0</div>
                 
-                <input type="text" id="playerNameInput" class="name-input" placeholder="Твой никнейм" maxlength="12" autocomplete="off" style="margin: 4px 0 8px;">
+                <input type="text" id="playerNameInput" class="name-input" placeholder="Твой никнейм" maxlength="12" autocomplete="off">
 
-                <div style="background: var(--md-sys-color-surface-container-high); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 12px 14px; font-size: 12px; line-height: 1.5; text-align: center; color: var(--md-sys-color-on-surface-variant); margin: 4px 0 12px; width: 100%;">
-                    <div style="font-weight: 700; color: var(--md-sys-color-primary); margin-bottom: 4px;" id="uiControlsTitle">Управление</div>
-                    <div id="uiControlsTip" style="font-size: 11px; opacity: 0.9;">WASD/Стрелки — движение | <b>Z / Пробел</b> — стрельба | <b>X</b> — Бомба</div>
+                <div class="size-picker">
+                    <button class="size-btn" data-size="10">10x10</button>
+                    <button class="size-btn active" data-size="20">20x20</button>
+                    <button class="size-btn" data-size="40">40x40</button>
                 </div>
 
                 <div class="button-group">
-                    <button class="btn-primary" id="uiPlayBtn">Играть</button>
-                    <a href="index.html" class="btn-secondary" id="uiDanmakuToHubBtn" style="display:flex; align-items:center; justify-content:center; text-decoration:none;">Все игры</a>
+                    <button class="btn-primary" id="uiPlayBtn">Play</button>
+                    <a href="../" class="btn-secondary" id="uiSnakeToHubBtn" style="display:flex; align-items:center; justify-content:center; text-decoration:none;">All games</a>
                 </div>
             </div>
         </div>
@@ -116,32 +116,28 @@
         <div class="overlay" id="gameOverScreen">
             <div class="menu-inner">
                 <div class="menu-title" id="uiGameOverTitle" style="color: var(--md-sys-color-error)">Game Over</div>
-                <div class="high-score"><span id="uiFinalScoreText">Счет: </span><span id="finalScore">0</span></div>
-                <div class="last-score" style="margin-top: 4px;"><span id="uiFinalGrazeText">Грейз: </span><span id="finalGraze">0</span></div>
-                <div class="last-score" style="margin-top: 2px;"><span id="uiFinalTimeText">Время: </span><span id="finalTime">0s</span></div>
+                <div class="high-score"><span id="uiFinalScoreText">Score: </span><span id="finalScore">0</span></div>
                 
-                <div class="button-group" style="margin-top: 14px;">
-                    <button class="btn-primary" id="uiRestartBtn">Заново</button>
-                    <button class="btn-secondary" id="uiMenuBtn">Меню</button>
-                    <a href="index.html" class="btn-secondary" id="uiGameOverToHubBtn" style="display:flex; align-items:center; justify-content:center; text-decoration:none;">Все игры</a>
+                <div class="button-group">
+                    <button class="btn-primary" id="uiRestartBtn">Restart</button>
+                    <button class="btn-secondary" id="uiMenuBtn">Menu</button>
+                    <a href="../" class="btn-secondary" id="uiGameOverToHubBtn" style="display:flex; align-items:center; justify-content:center; text-decoration:none;">All games</a>
                 </div>
             </div>
         </div>
 
-        <div class="overlay" id="pauseScreen">
-            <div class="menu-inner">
-                <div class="menu-title" id="uiPauseTitle">Пауза</div>
-                <div class="button-group" style="margin-top: 14px;">
-                    <button class="btn-primary" id="uiResumeBtn">Продолжить</button>
-                    <button class="btn-secondary" id="uiPauseRestartBtn">Заново</button>
-                    <a href="index.html" class="btn-secondary" style="display:flex; align-items:center; justify-content:center; text-decoration:none;">Все игры</a>
-                </div>
+        <div id="devMenu">
+                <div class="menu-title" id="uiDevTitle">DEV</div>
+                <div class="high-score">Refyrd.dev</div>
+            
+            <div class="button-group">
+                <button class="btn-secondary" id="uiDevConfetti">Конфетти</button>
+                <button class="btn-secondary" id="uiDevGlow">Свечение змеи</button>
+                <button class="btn-secondary" id="uiDevAddScore">+10 очков</button>
+                <button class="btn-secondary" id="uiDevFill">Длинная змейка</button>
+                <button class="btn-primary" id="uiDevClose">Закрыть</button>
             </div>
         </div>
-    </div>
-
-    <div class="danmaku-touch-bar" id="touchBar">
-        <button class="danmaku-touch-btn" id="touchBombBtn">Бомба (X)</button>
     </div>
 
     <div class="leaderboard" id="leaderboard">
@@ -283,8 +279,8 @@
         </div>
     </div>
 
-    <script src="i18n.js?v=1"></script>
-    <script src="profanity.js?v=1"></script>
-    <script src="danmaku.js?v=3"></script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../profanity.js?v=1"></script>
+    <script src="../script.js?v=4"></script>
 </body>
 </html>
