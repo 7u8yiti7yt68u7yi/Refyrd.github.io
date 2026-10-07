@@ -270,6 +270,10 @@ body {
     overflow-y: auto;
     position: relative;
 }
+body.hub-body,
+body:has(.hub-page-container) {
+    justify-content: flex-start;
+}
 
 #confettiCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 
@@ -919,16 +923,35 @@ body {
     text-transform: uppercase;
 }
 .hub-feedback-section .feedback-list {
-    max-height: 280px;
-    overflow-y: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    width: 100%;
 }
-.hub-feedback-section .feedback-list::-webkit-scrollbar {
-    display: none;
+
+.hub-fb-show-more-wrap {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.hub-fb-show-more-btn {
+    height: 36px;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--md-sys-shape-corner-full);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-primary);
+    cursor: pointer;
+    transition: all var(--md-sys-motion-duration-short) ease;
+}
+
+.hub-fb-show-more-btn:hover {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
 }
 
 /* === COOKIE BANNER (M3 EXPRESSIVE) === */

@@ -187,11 +187,15 @@ function applyLanguage() {
     if (cookieSaveBtn) cookieSaveBtn.innerText = t.cookieSave;
 
     // Refresh feedback texts in DOM
-    document.querySelectorAll('.fb-expand').forEach(el => {
-        const textEl = el.closest('.fb-entry')?.querySelector('.fb-text');
-        el.textContent = textEl && textEl.classList.contains('expanded') ? t.fbShowLess : t.fbShowMore;
-    });
-    document.querySelectorAll('.fb-reply-btn').forEach(el => el.textContent = t.fbReply);
+    if (typeof renderHubFeedbackList === 'function' && typeof fbHubCacheDocs !== 'undefined' && fbHubCacheDocs.length > 0) {
+        renderHubFeedbackList();
+    } else {
+        document.querySelectorAll('.fb-expand').forEach(el => {
+            const textEl = el.closest('.fb-entry')?.querySelector('.fb-text');
+            el.textContent = textEl && textEl.classList.contains('expanded') ? t.fbShowLess : t.fbShowMore;
+        });
+        document.querySelectorAll('.fb-reply-btn').forEach(el => el.textContent = t.fbReply);
+    }
 }
 
 if (langToggle) {
@@ -878,12 +882,22 @@ auth.onAuthStateChanged(user => {
             authBtn.style.color = '';
             authBtn.title = (i18n[currentLang] || i18n.ru).signInTooltip || 'Sign in';
         }
+        if (auth) {
+            auth.signInAnonymously().catch(e => {
+                console.warn('Anonymous sign-in failed in hub auth listener', e);
+            });
+        }
         loadHubFeedback(true);
     }
 });
 
 // === HUB FEEDBACK SYSTEM (FEEDBACK_HUB) ===
 const FEEDBACK_HUB_COLLECTION = 'feedback_hub';
+const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
+let fbHubCacheDocs = [];
+let fbHubShowAll = false;
+let fbHubActiveCollection = FEEDBACK_HUB_COLLECTION;
+
 const fbList = document.getElementById('fbList');
 const fbOverlay = document.getElementById('fbOverlay');
 const fbClose = document.getElementById('fbClose');
@@ -892,6 +906,15 @@ const fbSubmit = document.getElementById('fbSubmit');
 const fbNameInput = document.getElementById('fbNameInput');
 const fbMessageInput = document.getElementById('fbMessageInput');
 const fbStatus = document.getElementById('fbStatus');
+const hubFbShowMoreWrap = document.getElementById('hubFbShowMoreWrap');
+const hubFbShowMoreBtn = document.getElementById('hubFbShowMoreBtn');
+
+if (hubFbShowMoreBtn) {
+    hubFbShowMoreBtn.addEventListener('click', () => {
+        fbHubShowAll = !fbHubShowAll;
+        renderHubFeedbackList();
+    });
+}
 
 function formatCommentCount(n) {
     if (currentLang === 'ru') {
@@ -937,11 +960,12 @@ if (fbSubmit) {
         try {
             fbSubmit.disabled = true;
             if (fbStatus) { fbStatus.textContent = t.fbSending; fbStatus.style.color = 'var(--md-sys-color-on-surface)'; }
-            if (!auth.currentUser) {
+            if (auth && !auth.currentUser) {
                 await auth.signInAnonymously();
             }
             const currentUid = auth.currentUser ? auth.currentUser.uid : (authUid || getCookie('authUid') || '');
-            await db.collection(FEEDBACK_HUB_COLLECTION).add({
+            const targetCollection = fbHubActiveCollection || FEEDBACK_HUB_COLLECTION;
+            const newFeedback = {
                 name: name,
                 message: msg,
                 uid: currentUid,
@@ -949,7 +973,17 @@ if (fbSubmit) {
                 likes: 0,
                 dislikes: 0,
                 commentCount: 0
-            });
+            };
+            try {
+                await db.collection(targetCollection).add(newFeedback);
+            } catch (addErr) {
+                if (targetCollection !== 'feedback') {
+                    await db.collection('feedback').add(newFeedback);
+                    fbHubActiveCollection = 'feedback';
+                } else {
+                    throw addErr;
+                }
+            }
             setCookie('snakeNick', name, 365);
             if (fbStatus) { fbStatus.textContent = t.fbSent; fbStatus.style.color = 'var(--md-sys-color-primary)'; }
             if (fbMessageInput) fbMessageInput.value = '';
@@ -969,71 +1003,148 @@ if (fbSubmit) {
 async function loadHubFeedback(silent) {
     if (!fbList) return;
     const t = i18n[currentLang] || i18n.ru;
-    if (!silent) fbList.innerHTML = `<div class="lb-loading">${t.lbLoading}</div>`;
+    if (!silent && !fbHubCacheDocs.length) fbList.innerHTML = `<div class="lb-loading">${t.lbLoading}</div>`;
     try {
-        const snap = await db.collection(FEEDBACK_HUB_COLLECTION).orderBy('time', 'desc').limit(50).get();
+        if (auth && !auth.currentUser) {
+            try {
+                await auth.signInAnonymously();
+            } catch (anonErr) {
+                console.warn('Anonymous sign-in before loadHubFeedback failed:', anonErr);
+            }
+        }
+        let snap;
+        let usedCollection = fbHubActiveCollection || FEEDBACK_HUB_COLLECTION;
+        try {
+            snap = await db.collection(usedCollection).orderBy('time', 'desc').limit(50).get();
+        } catch (e1) {
+            console.warn('Feedback query with orderBy failed:', e1);
+            try {
+                snap = await db.collection(usedCollection).limit(50).get();
+            } catch (e2) {
+                console.warn('feedback_hub failed, falling back to feedback collection:', e2);
+                usedCollection = 'feedback';
+                try {
+                    snap = await db.collection(usedCollection).orderBy('time', 'desc').limit(50).get();
+                } catch (e3) {
+                    snap = await db.collection(usedCollection).limit(50).get();
+                }
+            }
+        }
+        fbHubActiveCollection = usedCollection;
+
         if (snap.empty) {
+            fbHubCacheDocs = [];
             fbList.innerHTML = `<div class="lb-empty">${t.fbNoFeedback}</div>`;
+            if (hubFbShowMoreWrap) hubFbShowMoreWrap.style.display = 'none';
             return;
         }
-        const feedbackIds = [];
-        snap.forEach(doc => feedbackIds.push(doc.id));
 
-        const userVotes = {};
-        try {
-            const cached = JSON.parse(localStorage.getItem('fbHubVotes') || '{}');
-            Object.keys(cached).forEach(id => { if (feedbackIds.includes(id)) userVotes[id] = cached[id]; });
-        } catch (_) {}
+        const docs = [];
+        snap.forEach(doc => docs.push(doc));
 
-        const myUid = authUid || getCookie('authUid') || '';
-        let html = '';
-        snap.forEach(doc => {
-            const d = doc.data();
-            const id = doc.id;
-            const time = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
-            const userVote = userVotes[id] || '';
-            const likes = d.likes ?? d.likeCount ?? 0;
-            const dislikes = d.dislikes ?? d.dislikeCount ?? 0;
-            const msg = escapeHtml(d.message);
-            const long = msg.length > 100;
-            const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
-            const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
-            const isDev = id === DEV_UID || d.uid === DEV_UID;
-            const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
-            html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
-                ${isOwner ? `<button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>` : ''}
-                <div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
-                <div class="fb-expand-row">
-                    ${long ? '<button class="fb-expand">' + t.fbShowMore + '</button>' : ''}
-                    ${long ? '<span class="fb-sep">·</span>' : ''}
-                    <button class="fb-reply-btn">${t.fbReply}</button>
-                </div>
-                <div class="fb-actions">
-                    <button class="fb-like${userVote === 'like' ? ' active' : ''}">👍 <span>${likes}</span></button>
-                    <button class="fb-dislike${userVote === 'dislike' ? ' active' : ''}">👎 <span>${dislikes}</span></button>
-                </div>
-                <button class="fb-comment-stats" data-count="${d.commentCount ?? 0}"${d.commentCount ? '' : ' style="display:none"'}>${formatCommentCount(d.commentCount ?? 0)}</button>
-                <div class="fb-time">${escapeHtml(d.name || t.anonymous)}${devBadge} · ${time}</div>
-                <div class="fb-comments" style="display:none">
-                    <div class="fb-comments-header"><button class="fb-comments-close">✕</button></div>
-                    <div class="fb-comments-list"></div>
-                    <div class="fb-comment-form">
-                        <input class="fb-comment-input" placeholder="${t.fbWriteComment}">
-                        <button class="fb-comment-send">${t.fbSendComment}</button>
-                    </div>
-                </div>
-            </div>`;
+        // Sort by likes descending, then net likes, then timestamp descending
+        docs.sort((a, b) => {
+            const da = a.data(), db = b.data();
+            const likesA = da.likes ?? da.likeCount ?? 0;
+            const likesB = db.likes ?? db.likeCount ?? 0;
+            if (likesB !== likesA) return likesB - likesA;
+            const netA = likesA - (da.dislikes ?? da.dislikeCount ?? 0);
+            const netB = likesB - (db.dislikes ?? db.dislikeCount ?? 0);
+            if (netB !== netA) return netB - netA;
+            const timeA = da.time?.seconds || 0;
+            const timeB = db.time?.seconds || 0;
+            return timeB - timeA;
         });
-        fbList.innerHTML = html;
+
+        fbHubCacheDocs = docs;
+        renderHubFeedbackList();
     } catch (e) {
-        fbList.innerHTML = `<div class="lb-empty">${t.fbLoadFail}</div>`;
+        console.error('loadHubFeedback error:', e);
+        if (!fbHubCacheDocs.length) {
+            fbList.innerHTML = `<div class="lb-empty">${t.fbLoadFail}</div>`;
+            if (hubFbShowMoreWrap) hubFbShowMoreWrap.style.display = 'none';
+        }
+    }
+}
+
+function renderHubFeedbackList() {
+    if (!fbList) return;
+    const t = i18n[currentLang] || i18n.ru;
+    if (!fbHubCacheDocs.length) {
+        fbList.innerHTML = `<div class="lb-empty">${t.fbNoFeedback}</div>`;
+        if (hubFbShowMoreWrap) hubFbShowMoreWrap.style.display = 'none';
+        return;
+    }
+
+    const feedbackIds = fbHubCacheDocs.map(doc => doc.id);
+    const userVotes = {};
+    try {
+        const cached = JSON.parse(localStorage.getItem('fbHubVotes') || '{}');
+        Object.keys(cached).forEach(id => { if (feedbackIds.includes(id)) userVotes[id] = cached[id]; });
+    } catch (_) {}
+
+    const myUid = authUid || getCookie('authUid') || (auth.currentUser ? auth.currentUser.uid : '');
+    const displayDocs = fbHubShowAll ? fbHubCacheDocs : fbHubCacheDocs.slice(0, 3);
+    let html = '';
+
+    displayDocs.forEach(doc => {
+        const d = doc.data();
+        const id = doc.id;
+        const time = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
+        const userVote = userVotes[id] || '';
+        const likes = d.likes ?? d.likeCount ?? 0;
+        const dislikes = d.dislikes ?? d.dislikeCount ?? 0;
+        const msg = escapeHtml(d.message || '');
+        const long = msg.length > 100;
+        const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+        const isDev = id === DEV_UID || d.uid === DEV_UID;
+        const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
+        html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
+            ${isOwner ? `<button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>` : ''}
+            <div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
+            <div class="fb-expand-row">
+                ${long ? '<button class="fb-expand">' + t.fbShowMore + '</button>' : ''}
+                ${long ? '<span class="fb-sep">·</span>' : ''}
+                <button class="fb-reply-btn">${t.fbReply}</button>
+            </div>
+            <div class="fb-actions">
+                <button class="fb-like${userVote === 'like' ? ' active' : ''}">👍 <span>${likes}</span></button>
+                <button class="fb-dislike${userVote === 'dislike' ? ' active' : ''}">👎 <span>${dislikes}</span></button>
+            </div>
+            <button class="fb-comment-stats" data-count="${d.commentCount ?? 0}"${d.commentCount ? '' : ' style="display:none"'}>${formatCommentCount(d.commentCount ?? 0)}</button>
+            <div class="fb-time">${escapeHtml(d.name || t.anonymous)}${devBadge} · ${time}</div>
+            <div class="fb-comments" style="display:none">
+                <div class="fb-comments-header"><button class="fb-comments-close">✕</button></div>
+                <div class="fb-comments-list"></div>
+                <div class="fb-comment-form">
+                    <input class="fb-comment-input" placeholder="${t.fbWriteComment}">
+                    <button class="fb-comment-send">${t.fbSendComment}</button>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    fbList.innerHTML = html;
+
+    if (hubFbShowMoreWrap && hubFbShowMoreBtn) {
+        if (fbHubCacheDocs.length > 3) {
+            hubFbShowMoreWrap.style.display = 'flex';
+            if (fbHubShowAll) {
+                hubFbShowMoreBtn.textContent = t.fbHubShowTop3 || 'Показать топ 3';
+            } else {
+                const remaining = fbHubCacheDocs.length - 3;
+                hubFbShowMoreBtn.textContent = (t.fbHubShowMore || 'Показать ещё') + ` (${remaining})`;
+            }
+        } else {
+            hubFbShowMoreWrap.style.display = 'none';
+        }
     }
 }
 
 // Voting logic
 const _votingLock = {};
 async function voteFeedback(docId, type) {
-    const voteKey = authUid;
+    const voteKey = authUid || getCookie('authUid') || (auth.currentUser ? auth.currentUser.uid : '');
     if (!voteKey || _votingLock[docId]) return;
     _votingLock[docId] = true;
 
@@ -1084,7 +1195,25 @@ async function voteFeedback(docId, type) {
         localStorage.setItem('fbHubVotes', JSON.stringify(cached));
     } catch (_) {}
 
-    const ref = db.collection(FEEDBACK_HUB_COLLECTION).doc(docId);
+    const cachedDoc = fbHubCacheDocs.find(d => d.id === docId);
+    if (cachedDoc) {
+        const cd = cachedDoc.data();
+        if (type === 'like') {
+            if (wasLiked) cd.likes = Math.max(0, (cd.likes ?? 0) - 1);
+            else {
+                cd.likes = (cd.likes ?? 0) + 1;
+                if (wasDisliked) cd.dislikes = Math.max(0, (cd.dislikes ?? 0) - 1);
+            }
+        } else {
+            if (wasDisliked) cd.dislikes = Math.max(0, (cd.dislikes ?? 0) - 1);
+            else {
+                cd.dislikes = (cd.dislikes ?? 0) + 1;
+                if (wasLiked) cd.likes = Math.max(0, (cd.likes ?? 0) - 1);
+            }
+        }
+    }
+
+    const ref = db.collection(fbHubActiveCollection || FEEDBACK_HUB_COLLECTION).doc(docId);
     const voteRef = ref.collection('votes').doc(voteKey);
 
     try {
@@ -1122,13 +1251,13 @@ async function loadComments(entry) {
     const statsBtn = entry.querySelector('.fb-comment-stats');
     const t = i18n[currentLang] || i18n.ru;
     try {
-        const snap = await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).collection('comments').orderBy('time', 'asc').limit(20).get();
+        const snap = await db.collection(fbHubActiveCollection || FEEDBACK_HUB_COLLECTION).doc(docId).collection('comments').orderBy('time', 'asc').limit(20).get();
         if (snap.empty) {
             list.innerHTML = `<div class="lb-empty">${t.fbNoComments}</div>`;
             statsBtn.style.display = 'none';
             return;
         }
-        const myUid = authUid || getCookie('authUid') || '';
+        const myUid = authUid || getCookie('authUid') || (auth.currentUser ? auth.currentUser.uid : '');
         let html = '';
         let count = 0;
         snap.forEach(doc => {
@@ -1162,7 +1291,7 @@ async function submitComment(entry) {
     const t = i18n[currentLang] || i18n.ru;
     const rawName = getCookie('snakeNick') || (authUser && authUser.displayName) || t.anonymous;
     const name = typeof censorProfanity === 'function' ? censorProfanity(rawName) : rawName;
-    const uid = authUid || getCookie('authUid') || '';
+    const uid = authUid || getCookie('authUid') || (auth.currentUser ? auth.currentUser.uid : '');
     const list = entry.querySelector('.fb-comments-list');
     const statsBtn = entry.querySelector('.fb-comment-stats');
 
@@ -1186,11 +1315,11 @@ async function submitComment(entry) {
     statsBtn.style.display = '';
 
     try {
-        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).collection('comments').add({
+        await db.collection(fbHubActiveCollection || FEEDBACK_HUB_COLLECTION).doc(docId).collection('comments').add({
             name, message: msg, uid,
             time: firebase.firestore.FieldValue.serverTimestamp()
         });
-        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).update({
+        await db.collection(fbHubActiveCollection || FEEDBACK_HUB_COLLECTION).doc(docId).update({
             commentCount: firebase.firestore.FieldValue.increment(1)
         });
         await loadComments(entry);
@@ -1213,8 +1342,8 @@ async function deleteComment(entry, cid) {
     statsBtn.textContent = formatCommentCount(newCount);
     if (newCount <= 0) statsBtn.style.display = 'none';
     try {
-        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).collection('comments').doc(cid).delete();
-        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).update({
+        await db.collection(fbHubActiveCollection || FEEDBACK_HUB_COLLECTION).doc(docId).collection('comments').doc(cid).delete();
+        await db.collection(fbHubActiveCollection || FEEDBACK_HUB_COLLECTION).doc(docId).update({
             commentCount: firebase.firestore.FieldValue.increment(-1)
         });
     } catch (_) {}
@@ -1226,8 +1355,13 @@ async function deleteFeedback(docId) {
     if (!confirm(confirmMsg)) return;
     const entry = fbList ? fbList.querySelector(`.fb-entry[data-id="${docId}"]`) : null;
     if (entry) entry.remove();
+    fbHubCacheDocs = fbHubCacheDocs.filter(d => d.id !== docId);
+    if (fbHubCacheDocs.length <= 3 && fbHubShowAll) {
+        fbHubShowAll = false;
+    }
+    renderHubFeedbackList();
     try {
-        await db.collection(FEEDBACK_HUB_COLLECTION).doc(docId).delete();
+        await db.collection(fbHubActiveCollection || FEEDBACK_HUB_COLLECTION).doc(docId).delete();
     } catch (e) {
         console.warn('Delete feedback failed', e);
         alert(currentLang === 'ru' ? 'Ошибка при удалении: ' + e.message : 'Delete error: ' + e.message);
