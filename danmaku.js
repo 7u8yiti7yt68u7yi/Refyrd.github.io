@@ -551,7 +551,8 @@ function spawnBoss(milestone) {
         timer: 0,
         phaseTimer: 0,
         phase: 1,
-        angle: 0
+        angle: 0,
+        attackCooldown: 0.5
     };
     addFloatingText(GAME_WIDTH / 2, 70, (currentLang === 'ru' ? 'ПРИБЛИЖЕНИЕ БОССА!' : 'BOSS WARNING!'), bColor, 20);
 }
@@ -741,6 +742,7 @@ function update(dt) {
     if (boss) {
         boss.timer += dt;
         boss.phaseTimer += dt;
+        boss.attackCooldown -= dt;
         boss.y += (boss.targetY - boss.y) * 0.04;
         boss.x = GAME_WIDTH / 2 + Math.sin(boss.timer * 1.05) * 75;
         boss.angle += dt * 1.8;
@@ -749,14 +751,16 @@ function update(dt) {
             // Vespera: Twilight Weaver (Spirals & Stardust)
             const attackCycle = boss.timer % 5.5;
             if (attackCycle < 3.4) {
-                if (Math.floor(boss.timer * 20) % 4 === 0) {
+                if (boss.attackCooldown <= 0) {
+                    boss.attackCooldown = 0.18;
                     const spd = 2.4;
                     const a = boss.angle;
                     enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 4, color: '#E040FB', shape: 'star', grazed: false });
                     enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a + Math.PI) * spd, vy: Math.sin(a + Math.PI) * spd, r: 4, color: '#00E5FF', shape: 'star', grazed: false });
                 }
             } else if (attackCycle >= 3.8 && attackCycle < 4.8) {
-                if (Math.floor(boss.timer * 10) % 3 === 0) {
+                if (boss.attackCooldown <= 0) {
+                    boss.attackCooldown = 0.38;
                     spawnBulletAimed(boss.x, boss.y, 7, 2.7, 0.18, '#B388FF', 3.5, 'needle');
                 }
             }
@@ -764,11 +768,13 @@ function update(dt) {
             // Chronos Iris: Pulse of Eternity (Clockwork rings & Pendulums)
             const attackCycle = boss.timer % 6.0;
             if (attackCycle < 3.8) {
-                if (Math.floor(boss.timer * 12) % 4 === 0) {
+                if (boss.attackCooldown <= 0) {
+                    boss.attackCooldown = 0.65;
                     spawnBulletRing(boss.x, boss.y, 12, 2.2, '#FFD700', 4.5, 'circle', boss.angle);
                 }
             } else if (attackCycle >= 4.2 && attackCycle < 5.4) {
-                if (Math.floor(boss.timer * 10) % 2 === 0) {
+                if (boss.attackCooldown <= 0) {
+                    boss.attackCooldown = 0.40;
                     spawnBulletAimed(boss.x, boss.y, 5, 3.2, 0.16, '#FFAB00', 4, 'needle');
                 }
             }
@@ -776,14 +782,16 @@ function update(dt) {
             // Solaria: Flare Empress (Solar corona & Supernova spreads)
             const attackCycle = boss.timer % 6.5;
             if (attackCycle < 4.2) {
-                if (Math.floor(boss.timer * 16) % 3 === 0) {
+                if (boss.attackCooldown <= 0) {
+                    boss.attackCooldown = 0.22;
                     const spd = 2.8;
                     const a = boss.angle * 1.4;
                     enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 4.5, color: '#FF1744', shape: 'circle', grazed: false });
                     enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(-a) * spd, vy: Math.sin(-a) * spd, r: 4.5, color: '#FF9100', shape: 'star', grazed: false });
                 }
             } else if (attackCycle >= 4.6 && attackCycle < 6.0) {
-                if (Math.floor(boss.timer * 10) % 2 === 0) {
+                if (boss.attackCooldown <= 0) {
+                    boss.attackCooldown = 0.38;
                     spawnBulletAimed(boss.x, boss.y, 9, 3.1, 0.16, '#D50000', 4, 'needle');
                 }
             }
@@ -911,14 +919,10 @@ function draw() {
 
     // 3. Player Bullets
     for (const b of playerBullets) {
-        ctx.save();
         ctx.fillStyle = b.color;
-        ctx.shadowColor = b.color;
-        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 3);
         ctx.fill();
-        ctx.restore();
     }
 
     // 4. Enemies
@@ -943,14 +947,13 @@ function draw() {
 
     // 8. Particles
     for (const p of particles) {
-        ctx.save();
         ctx.globalAlpha = Math.max(0, p.life);
         ctx.fillStyle = p.color;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
     }
+    ctx.globalAlpha = 1.0;
 
     // 9. Floating Texts
     for (const ft of floatingTexts) {
@@ -1311,15 +1314,12 @@ function drawBoss(b, colors) {
 
 // === VECTOR MODEL: BULLETS ===
 function drawBullet(b) {
-    ctx.save();
-    ctx.translate(b.x, b.y);
-
     if (b.shape === 'needle') {
+        ctx.save();
+        ctx.translate(b.x, b.y);
         const angle = Math.atan2(b.vy, b.vx);
         ctx.rotate(angle);
         ctx.fillStyle = b.color;
-        ctx.shadowColor = b.color;
-        ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.roundRect(-b.r * 1.8, -b.r * 0.8, b.r * 3.6, b.r * 1.6, 2);
         ctx.fill();
@@ -1328,10 +1328,11 @@ function drawBullet(b) {
         ctx.beginPath();
         ctx.roundRect(-b.r, -b.r * 0.4, b.r * 2, b.r * 0.8, 1);
         ctx.fill();
+        ctx.restore();
     } else if (b.shape === 'star') {
+        ctx.save();
+        ctx.translate(b.x, b.y);
         ctx.fillStyle = b.color;
-        ctx.shadowColor = b.color;
-        ctx.shadowBlur = 8;
         ctx.beginPath();
         for (let i = 0; i < 5; i++) {
             const a = (i * Math.PI * 2) / 5 - Math.PI / 2;
@@ -1344,23 +1345,20 @@ function drawBullet(b) {
         }
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
     } else {
-        // Classic circular Danmaku bead
+        // Classic circular Danmaku bead (Direct rendering without matrix overhead)
         ctx.fillStyle = b.color;
-        ctx.shadowColor = b.color;
-        ctx.shadowBlur = 7;
         ctx.beginPath();
-        ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.fill();
 
         // Bright white interior core
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.arc(0, 0, b.r * 0.5, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, b.r * 0.5, 0, Math.PI * 2);
         ctx.fill();
     }
-
-    ctx.restore();
 }
 
 // === IN-GAME HUD ===
