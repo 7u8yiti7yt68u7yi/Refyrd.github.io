@@ -42,10 +42,9 @@ function applyLanguage() {
     document.getElementById('uiFinalScoreText').innerText = i18n[currentLang].finalScoreText;
     document.getElementById('uiRestartBtn').innerText = i18n[currentLang].restartBtn;
     document.getElementById('uiMenuBtn').innerText = i18n[currentLang].menuBtn;
-    const snakeToHub = document.getElementById('uiSnakeToHubBtn');
-    if (snakeToHub) snakeToHub.innerText = i18n[currentLang].allGamesBtn;
-    const gameOverToHub = document.getElementById('uiGameOverToHubBtn');
-    if (gameOverToHub) gameOverToHub.innerText = i18n[currentLang].allGamesBtn;
+    document.querySelectorAll('.to-hub-btn, #uiSnakeToHubBtn, #uiGameOverToHubBtn').forEach(el => {
+        el.innerText = i18n[currentLang].allGamesBtn || (currentLang === 'ru' ? 'Все игры' : 'All games');
+    });
 
     const homeBtnEl = document.getElementById('homeBtn');
     if (homeBtnEl) homeBtnEl.title = i18n[currentLang].homeTooltip || 'Home';

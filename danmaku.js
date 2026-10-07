@@ -1450,8 +1450,8 @@ function applyLanguage() {
     const pauseRestart = document.getElementById('uiPauseRestartBtn');
     if (pauseRestart) pauseRestart.innerText = t.restartBtn;
 
-    const toHubBtns = document.querySelectorAll('#uiDanmakuToHubBtn, #uiGameOverToHubBtn');
-    toHubBtns.forEach(el => el.innerText = t.allGamesBtn);
+    const toHubBtns = document.querySelectorAll('.to-hub-btn, #uiDanmakuToHubBtn, #uiGameOverToHubBtn, #uiPauseToHubBtn');
+    toHubBtns.forEach(el => el.innerText = t.allGamesBtn || (currentLang === 'ru' ? 'Все игры' : 'All games'));
 
     const controlsTitle = document.getElementById('uiControlsTitle');
     if (controlsTitle) controlsTitle.innerText = currentLang === 'ru' ? 'Управление' : 'Controls';
@@ -2583,11 +2583,7 @@ async function loadFeedback(silent) {
     const t = i18n[currentLang] || i18n.ru;
     if (!silent) fbList.innerHTML = `<div class="lb-loading">${t.lbLoading}</div>`;
     try {
-        const queryPromise = db.collection(Fb_COLLECTION).orderBy('time', 'desc').limit(50).get();
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Network timeout')), 10000)
-        );
-        const snap = await Promise.race([queryPromise, timeoutPromise]);
+        const snap = await db.collection(Fb_COLLECTION).orderBy('time', 'desc').limit(50).get();
         if (currentLang !== _fbLangAtStart) return;
         if (snap.empty) {
             fbList.innerHTML = `<div class="lb-empty">${t.fbNoFeedback}</div>`;
@@ -2662,7 +2658,6 @@ async function loadFeedback(silent) {
         fbList.innerHTML = `<div class="lb-empty">${t.fbLoadFail}</div>`;
     }
 }
-loadFeedback();
 
 if (fbList) {
     fbList.addEventListener('click', (e) => {

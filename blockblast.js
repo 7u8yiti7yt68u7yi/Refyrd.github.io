@@ -1355,6 +1355,17 @@ function applyLanguage() {
     if (fbTitle) fbTitle.innerText = t.fbTitle || 'FEEDBACK';
     const tip = document.getElementById('uiControlsTip');
     if (tip) tip.innerText = t.bbControlsTip || 'Перетаскивай или кликай фигуры для расстановки на поле 8x8';
+    const controlsTitle = document.getElementById('uiControlsTitle');
+    if (controlsTitle) controlsTitle.innerText = currentLang === 'ru' ? 'Как играть' : 'How to play';
+
+    const gameOverTitle = document.getElementById('uiGameOverTitle');
+    if (gameOverTitle) gameOverTitle.innerText = t.gameOverTitle || 'Game Over';
+    const finalScoreText = document.getElementById('uiFinalScoreText');
+    if (finalScoreText) finalScoreText.innerText = t.finalScoreText || (currentLang === 'ru' ? 'Счет: ' : 'Score: ');
+
+    const toHubBtns = document.querySelectorAll('.to-hub-btn, #uiStartToHubBtn, #uiGameOverToHubBtn');
+    toHubBtns.forEach(el => el.innerText = t.allGamesBtn || (currentLang === 'ru' ? 'Все игры' : 'All games'));
+
     updateScoreDisplay();
 }
 
