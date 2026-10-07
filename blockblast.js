@@ -271,45 +271,45 @@ function resolveBlockColor(colorOrKey) {
 
 const SHAPE_DEFINITIONS = [
     // 1x1 Dot
-    { matrix: [[1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 6 },
+    { matrix: [[1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 6, size: 1 },
     // 2-block lines
-    { matrix: [[1, 1]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 8 },
-    { matrix: [[1], [1]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 8 },
+    { matrix: [[1, 1]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 8, size: 2 },
+    { matrix: [[1], [1]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 8, size: 2 },
     // 3-block lines
-    { matrix: [[1, 1, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 8 },
-    { matrix: [[1], [1], [1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 8 },
+    { matrix: [[1, 1, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 8, size: 3 },
+    { matrix: [[1], [1], [1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 8, size: 3 },
     // 4-block lines
-    { matrix: [[1, 1, 1, 1]], color: BLOCK_COLORS.blue, colorKey: 'blue', weight: 6 },
-    { matrix: [[1], [1], [1], [1]], color: BLOCK_COLORS.blue, colorKey: 'blue', weight: 6 },
+    { matrix: [[1, 1, 1, 1]], color: BLOCK_COLORS.blue, colorKey: 'blue', weight: 6, size: 4 },
+    { matrix: [[1], [1], [1], [1]], color: BLOCK_COLORS.blue, colorKey: 'blue', weight: 6, size: 4 },
     // 5-block lines
-    { matrix: [[1, 1, 1, 1, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 4 },
-    { matrix: [[1], [1], [1], [1], [1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 4 },
+    { matrix: [[1, 1, 1, 1, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 4, size: 5 },
+    { matrix: [[1], [1], [1], [1], [1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 4, size: 5 },
     // 2x2 Square
-    { matrix: [[1, 1], [1, 1]], color: BLOCK_COLORS.amber, colorKey: 'amber', weight: 8 },
+    { matrix: [[1, 1], [1, 1]], color: BLOCK_COLORS.amber, colorKey: 'amber', weight: 8, size: 4 },
     // 3x3 Square
-    { matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: BLOCK_COLORS.coral, colorKey: 'coral', weight: 3 },
+    { matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: BLOCK_COLORS.coral, colorKey: 'coral', weight: 3, size: 9 },
     // Small Corner L (2x2)
-    { matrix: [[1, 0], [1, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
-    { matrix: [[0, 1], [1, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
-    { matrix: [[1, 1], [1, 0]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
-    { matrix: [[1, 1], [0, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
+    { matrix: [[1, 0], [1, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6, size: 3 },
+    { matrix: [[0, 1], [1, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6, size: 3 },
+    { matrix: [[1, 1], [1, 0]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6, size: 3 },
+    { matrix: [[1, 1], [0, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6, size: 3 },
     // Big L (3x3)
-    { matrix: [[1, 0, 0], [1, 0, 0], [1, 1, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
-    { matrix: [[0, 0, 1], [0, 0, 1], [1, 1, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
-    { matrix: [[1, 1, 1], [1, 0, 0], [1, 0, 0]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
-    { matrix: [[1, 1, 1], [0, 0, 1], [0, 0, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
+    { matrix: [[1, 0, 0], [1, 0, 0], [1, 1, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4, size: 5 },
+    { matrix: [[0, 0, 1], [0, 0, 1], [1, 1, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4, size: 5 },
+    { matrix: [[1, 1, 1], [1, 0, 0], [1, 0, 0]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4, size: 5 },
+    { matrix: [[1, 1, 1], [0, 0, 1], [0, 0, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4, size: 5 },
     // T-shapes
-    { matrix: [[1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
-    { matrix: [[0, 1, 0], [1, 1, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
-    { matrix: [[1, 0], [1, 1], [1, 0]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
-    { matrix: [[0, 1], [1, 1], [0, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
+    { matrix: [[1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5, size: 4 },
+    { matrix: [[0, 1, 0], [1, 1, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5, size: 4 },
+    { matrix: [[1, 0], [1, 1], [1, 0]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5, size: 4 },
+    { matrix: [[0, 1], [1, 1], [0, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5, size: 4 },
     // Z / S shapes
-    { matrix: [[1, 1, 0], [0, 1, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
-    { matrix: [[0, 1, 1], [1, 1, 0]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
-    { matrix: [[1, 0], [1, 1], [0, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
-    { matrix: [[0, 1], [1, 1], [1, 0]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
+    { matrix: [[1, 1, 0], [0, 1, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4, size: 4 },
+    { matrix: [[0, 1, 1], [1, 1, 0]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4, size: 4 },
+    { matrix: [[1, 0], [1, 1], [0, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4, size: 4 },
+    { matrix: [[0, 1], [1, 1], [1, 0]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4, size: 4 },
     // Plus / Cross
-    { matrix: [[0, 1, 0], [1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 3 }
+    { matrix: [[0, 1, 0], [1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 3, size: 5 }
 ];
 
 function getRandomShape() {
@@ -322,7 +322,8 @@ function getRandomShape() {
                 color: def.color,
                 colorKey: def.colorKey,
                 rows: def.matrix.length,
-                cols: def.matrix[0].length
+                cols: def.matrix[0].length,
+                size: def.size || 4
             };
         }
         r -= def.weight;
@@ -332,7 +333,8 @@ function getRandomShape() {
         color: SHAPE_DEFINITIONS[0].color,
         colorKey: SHAPE_DEFINITIONS[0].colorKey,
         rows: SHAPE_DEFINITIONS[0].matrix.length,
-        cols: SHAPE_DEFINITIONS[0].matrix[0].length
+        cols: SHAPE_DEFINITIONS[0].matrix[0].length,
+        size: SHAPE_DEFINITIONS[0].size || 1
     };
 }
 
@@ -370,9 +372,209 @@ let dragX = 0;
 let dragY = 0;
 let selectedSlotIndex = -1; // for tap-to-select support
 
+// === SMART SOLVABLE BATCH GENERATOR ===
+function countOccupiedCells() {
+    let count = 0;
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            if (grid[r][c] !== null) count++;
+        }
+    }
+    return count;
+}
+
+function cloneShapeDef(def) {
+    return {
+        matrix: def.matrix.map(row => [...row]),
+        color: def.color,
+        colorKey: def.colorKey,
+        rows: def.matrix.length,
+        cols: def.matrix[0].length,
+        size: def.size || 4
+    };
+}
+
+function canPlaceShapeOnSimGrid(simGrid, matrix, targetRow, targetCol) {
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    if (targetRow < 0 || targetCol < 0) return false;
+    if (targetRow + rows > GRID_SIZE || targetCol + cols > GRID_SIZE) return false;
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (matrix[r][c] === 1) {
+                if (simGrid[targetRow + r][targetCol + c] !== null) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function hasAnyPlacementOnSimGrid(simGrid, matrix) {
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    for (let r = 0; r <= GRID_SIZE - rows; r++) {
+        for (let c = 0; c <= GRID_SIZE - cols; c++) {
+            if (canPlaceShapeOnSimGrid(simGrid, matrix, r, c)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function simulatePlaceAndClearOnSimGrid(simGrid, matrix, targetRow, targetCol) {
+    const nextGrid = simGrid.map(row => [...row]);
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (matrix[r][c] === 1) {
+                nextGrid[targetRow + r][targetCol + c] = 1;
+            }
+        }
+    }
+    const fullRows = [];
+    for (let r = 0; r < GRID_SIZE; r++) {
+        if (nextGrid[r].every(c => c !== null)) fullRows.push(r);
+    }
+    const fullCols = [];
+    for (let c = 0; c < GRID_SIZE; c++) {
+        let full = true;
+        for (let r = 0; r < GRID_SIZE; r++) {
+            if (nextGrid[r][c] === null) { full = false; break; }
+        }
+        if (full) fullCols.push(c);
+    }
+    for (const r of fullRows) {
+        for (let c = 0; c < GRID_SIZE; c++) nextGrid[r][c] = null;
+    }
+    for (const c of fullCols) {
+        for (let r = 0; r < GRID_SIZE; r++) nextGrid[r][c] = null;
+    }
+    return nextGrid;
+}
+
+function canSolveBatch(simGrid, pieces, step = 0, usedMask = 0, targetCount = 3) {
+    if (step >= targetCount) return true;
+    for (let i = 0; i < pieces.length; i++) {
+        if ((usedMask & (1 << i)) !== 0) continue;
+        const matrix = pieces[i].matrix;
+        const rows = matrix.length;
+        const cols = matrix[0].length;
+        for (let r = 0; r <= GRID_SIZE - rows; r++) {
+            for (let c = 0; c <= GRID_SIZE - cols; c++) {
+                if (canPlaceShapeOnSimGrid(simGrid, matrix, r, c)) {
+                    const nextGrid = simulatePlaceAndClearOnSimGrid(simGrid, matrix, r, c);
+                    if (canSolveBatch(nextGrid, pieces, step + 1, usedMask | (1 << i), targetCount)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function pickWeightedShape(pool) {
+    const totalWeight = pool.reduce((acc, s) => acc + s.weight, 0);
+    let r = Math.random() * totalWeight;
+    for (const def of pool) {
+        if (r < def.weight) return def;
+        r -= def.weight;
+    }
+    return pool[0];
+}
+
+function generateSmartDockPieces() {
+    const occupied = countOccupiedCells();
+    const freeCells = 64 - occupied;
+
+    // Filter available shapes pool based on board occupancy
+    let pool = SHAPE_DEFINITIONS;
+    if (freeCells < 18) {
+        // High saturation: prohibit large pieces, favor small shapes (1-4 blocks)
+        pool = SHAPE_DEFINITIONS.filter(s => s.size <= 4 && s.matrix.length <= 3 && s.matrix[0].length <= 3);
+    } else if (freeCells < 28) {
+        // Moderate saturation: exclude 3x3 square
+        pool = SHAPE_DEFINITIONS.filter(s => s.size <= 6 && (s.matrix.length < 3 || s.matrix[0].length < 3 || s.size < 9));
+    }
+
+    let bestTrio = null;
+    let bestScore = -1;
+
+    // Try up to 40 times to generate a trio that is 100% solvable in sequence
+    for (let attempt = 0; attempt < 40; attempt++) {
+        const candidateTrio = [];
+        let bigCount = 0;
+
+        for (let i = 0; i < 3; i++) {
+            let def = pickWeightedShape(pool);
+            if (def.size >= 5) {
+                if (bigCount >= 1) {
+                    const smallerPool = pool.filter(s => s.size < 5);
+                    def = pickWeightedShape(smallerPool.length ? smallerPool : pool);
+                } else {
+                    bigCount++;
+                }
+            }
+            candidateTrio.push(def);
+        }
+
+        const fitCount = candidateTrio.filter(d => hasAnyPlacementOnSimGrid(grid, d.matrix)).length;
+        if (fitCount === 0) continue; // Must have at least 1 placeable right away
+
+        if (canSolveBatch(grid, candidateTrio, 0, 0, 3)) {
+            // If 2 or 3 fit immediately, perfect!
+            if (fitCount >= 2 || freeCells < 20) {
+                return candidateTrio.map(cloneShapeDef);
+            }
+            // Keep as best fallback
+            if (fitCount > bestScore) {
+                bestScore = fitCount;
+                bestTrio = candidateTrio;
+            }
+        }
+    }
+
+    if (bestTrio) {
+        return bestTrio.map(cloneShapeDef);
+    }
+
+    // Fallback: If 3-in-a-row isn't found (very cramped board), ensure at least 2 can be placed
+    const fittingPool = pool.filter(s => hasAnyPlacementOnSimGrid(grid, s.matrix));
+    if (fittingPool.length > 0) {
+        for (let attempt = 0; attempt < 25; attempt++) {
+            const p1 = pickWeightedShape(fittingPool);
+            const p2 = pickWeightedShape(pool.filter(s => s.size <= 4));
+            const p3 = pickWeightedShape(pool.filter(s => s.size <= 3));
+            const candidateTrio = [p1, p2, p3];
+            if (canSolveBatch(grid, candidateTrio, 0, 0, 2)) {
+                return candidateTrio.map(cloneShapeDef);
+            }
+        }
+    }
+
+    // Ultimate fallback: Guarantee at least piece 0 fits!
+    const ultimateFit = SHAPE_DEFINITIONS.filter(s => hasAnyPlacementOnSimGrid(grid, s.matrix));
+    if (ultimateFit.length > 0) {
+        const p1 = pickWeightedShape(ultimateFit);
+        const smallShapes = SHAPE_DEFINITIONS.filter(s => s.size <= 3);
+        const p2 = pickWeightedShape(smallShapes);
+        const p3 = pickWeightedShape(smallShapes);
+        return [p1, p2, p3].map(cloneShapeDef);
+    }
+
+    // Absolutely no shapes fit (board is full/locked): return minimal shapes
+    return [SHAPE_DEFINITIONS[0], SHAPE_DEFINITIONS[1], SHAPE_DEFINITIONS[2]].map(cloneShapeDef);
+}
+
 function spawnNewDockPieces() {
+    const pieces = generateSmartDockPieces();
     for (let i = 0; i < DOCK_SLOTS.length; i++) {
-        DOCK_SLOTS[i].piece = getRandomShape();
+        DOCK_SLOTS[i].piece = pieces[i] || getRandomShape();
         DOCK_SLOTS[i].scale = 0;
         DOCK_SLOTS[i].scaleTarget = 1;
     }
@@ -866,7 +1068,13 @@ function render() {
             ctx.restore();
         }
 
+        const canFitNow = hasAnyValidPlacement(slot.piece.matrix);
+        ctx.save();
+        if (!canFitNow) {
+            ctx.globalAlpha = 0.38;
+        }
         renderPieceMatrix(slot.piece.matrix, resolveBlockColor(slot.piece.colorKey || slot.piece.color), slot.cx, slot.cy, 22 * slot.scale);
+        ctx.restore();
     }
 
     // 5. Dragged Piece (rendered at full cell size at drag position)
