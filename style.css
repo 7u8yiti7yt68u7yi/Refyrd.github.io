@@ -405,6 +405,10 @@ body {
     height: min(580px, 72vh, calc((100vw - 32px) * 1.36));
     max-height: 600px;
 }
+.game-container.blockblast-container {
+    height: min(560px, 72vh, calc((100vw - 32px) * 1.4));
+    max-height: 580px;
+}
 .danmaku-touch-bar {
     display: none;
     width: min(420px, 100vw - 32px);

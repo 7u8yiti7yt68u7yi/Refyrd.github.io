@@ -89,6 +89,15 @@ function applyLanguage() {
     const badgeBulletHell = document.getElementById('uiBadgeBulletHell');
     if (badgeBulletHell) badgeBulletHell.innerText = t.badgeBulletHell;
 
+    const bbTitle = document.getElementById('uiGameBlockBlastTitle');
+    if (bbTitle) bbTitle.innerText = t.gameBlockBlastTitle;
+    const bbDesc = document.getElementById('uiGameBlockBlastDesc');
+    if (bbDesc) bbDesc.innerText = t.gameBlockBlastDesc;
+    const playBtnBb = document.getElementById('uiPlayBtnBlockBlast');
+    if (playBtnBb) playBtnBb.innerText = t.badgePlayable;
+    const badgeBb = document.getElementById('uiBadgeBlockBlast');
+    if (badgeBb) badgeBb.innerText = t.badgePuzzle;
+
     const soonTitle = document.getElementById('uiGameSoonTitle');
     if (soonTitle) soonTitle.innerText = t.gameSoonTitle;
     const soonDesc = document.getElementById('uiGameSoonDesc');
