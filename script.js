@@ -546,7 +546,11 @@ function updateAuthUI() {
             authBtn.title = (authUser && (authUser.displayName || authUser.email)) || getCookie('snakeNick') || getCookie('authEmail') || (i18n[currentLang] || i18n.ru).authAccount;
         }
         const email = (authUser && (authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : ''))) || getCookie('authEmail') || '';
-        if (accEmail) accEmail.textContent = email;
+        if (authUser && authUser.uid === 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2') {
+            if (accEmail) accEmail.innerHTML = escapeHtml(email) + ' <span class="dev-badge">DEV</span>';
+        } else {
+            if (accEmail) accEmail.textContent = email;
+        }
         if (accNickInput) accNickInput.value = savedName || (authUser && authUser.displayName) || getCookie('snakeNick') || '';
         if (authMainView) authMainView.style.display = 'none';
         if (authAccountView) authAccountView.style.display = 'flex';
@@ -1008,12 +1012,15 @@ async function loadLeaderboard() {
         }
         let html = '';
         let rank = 1;
+        const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
         snapshot.forEach(doc => {
             const d = doc.data();
             const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+            const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
+            const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
             html += `<div class="lb-entry">
                 <span class="lb-rank">${medal || rank}</span>
-                <span class="lb-name">${escapeHtml(d.name && d.name.trim() ? d.name : i18n[currentLang].anonymous)}</span>
+                <span class="lb-name">${escapeHtml(d.name && d.name.trim() ? d.name : i18n[currentLang].anonymous)}${devBadge}</span>
                 <span class="lb-score">${(parseInt(d.score, 10) || 0)}</span>
             </div>`;
             rank++;
@@ -1106,8 +1113,10 @@ async function loadComments(entry) {
 			const d = doc.data();
 			const ct = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
 			const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+			const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
+			const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
 			html += `<div class="fb-comment" data-cid="${doc.id}">
-				<span class="fb-comment-name">${escapeHtml(d.name || i18n[currentLang].anonymous)}</span>
+				<span class="fb-comment-name">${escapeHtml(d.name || i18n[currentLang].anonymous)}${devBadge}</span>
 				<span class="fb-comment-msg">${escapeHtml(d.message)}</span>
 				<span class="fb-time">${ct}</span>
 				${isOwner ? '<button class="fb-comment-edit">✎</button><button class="fb-comment-del">✕</button>' : ''}
@@ -1289,7 +1298,9 @@ async function loadFeedback(silent) {
 			const msg = escapeHtml(d.message);
 			const long = msg.length > 100;
 			const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
-			html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
+				const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
+				const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
+				html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
 				${isOwner ? `<button class="fb-del-btn" title="${i18n[currentLang].deleteBtn || 'Удалить'}">✕</button>` : ''}
 				<div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
 				<div class="fb-expand-row">
@@ -1302,7 +1313,7 @@ async function loadFeedback(silent) {
 					<button class="fb-dislike${userVote === 'dislike' ? ' active' : ''}">👎 <span>${dislikes}</span></button>
 				</div>
 				<button class="fb-comment-stats" data-count="${d.commentCount ?? 0}"${d.commentCount ? '' : ' style="display:none"'}>${formatCommentCount(d.commentCount ?? 0)}</button>
-				<div class="fb-time">${escapeHtml(d.name || i18n[currentLang].anonymous)} · ${time}</div>
+				<div class="fb-time">${escapeHtml(d.name || i18n[currentLang].anonymous)}${devBadge} · ${time}</div>
 				<div class="fb-comments" style="display:none">
 					<div class="fb-comments-header"><button class="fb-comments-close">✕</button></div>
 					<div class="fb-comments-list"></div>

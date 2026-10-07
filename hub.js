@@ -572,7 +572,12 @@ function updateAuthViews() {
         if (authMainView) authMainView.style.display = 'none';
         if (authAccountView) authAccountView.style.display = 'flex';
         toggleAccView(false);
-        if (accEmail) accEmail.textContent = authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : '');
+        if (authUser && authUser.uid === 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2') {
+            const rawEmail = authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : '');
+            if (accEmail) accEmail.innerHTML = escapeHtml(rawEmail) + ' <span class="dev-badge">DEV</span>';
+        } else {
+            if (accEmail) accEmail.textContent = authUser.email || (authUser.providerData[0] ? authUser.providerData[0].email : '');
+        }
         if (accNickInput) accNickInput.value = getCookie('snakeNick') || authUser.displayName || '';
         renderProviders();
         loadNicknameFromFirestore();
@@ -992,6 +997,9 @@ async function loadHubFeedback(silent) {
             const msg = escapeHtml(d.message);
             const long = msg.length > 100;
             const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+            const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
+            const isDev = id === DEV_UID || d.uid === DEV_UID;
+            const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
             html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
                 ${isOwner ? `<button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>` : ''}
                 <div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
@@ -1005,7 +1013,7 @@ async function loadHubFeedback(silent) {
                     <button class="fb-dislike${userVote === 'dislike' ? ' active' : ''}">👎 <span>${dislikes}</span></button>
                 </div>
                 <button class="fb-comment-stats" data-count="${d.commentCount ?? 0}"${d.commentCount ? '' : ' style="display:none"'}>${formatCommentCount(d.commentCount ?? 0)}</button>
-                <div class="fb-time">${escapeHtml(d.name || t.anonymous)} · ${time}</div>
+                <div class="fb-time">${escapeHtml(d.name || t.anonymous)}${devBadge} · ${time}</div>
                 <div class="fb-comments" style="display:none">
                     <div class="fb-comments-header"><button class="fb-comments-close">✕</button></div>
                     <div class="fb-comments-list"></div>
@@ -1127,8 +1135,10 @@ async function loadComments(entry) {
             const d = doc.data();
             const ct = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
             const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
+            const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
+            const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
             html += `<div class="fb-comment" data-cid="${doc.id}">
-                <span class="fb-comment-name">${escapeHtml(d.name || t.anonymous)}</span>
+                <span class="fb-comment-name">${escapeHtml(d.name || t.anonymous)}${devBadge}</span>
                 <span class="fb-comment-msg">${escapeHtml(d.message)}</span>
                 <span class="fb-time">${ct}</span>
                 ${isOwner ? '<button class="fb-comment-del">✕</button>' : ''}

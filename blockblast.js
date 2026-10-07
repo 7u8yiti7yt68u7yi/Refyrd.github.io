@@ -1507,12 +1507,15 @@ async function loadLeaderboard() {
         }
         let html = '';
         let rank = 1;
+        const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
         snapshot.forEach(doc => {
             const d = doc.data();
             const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+            const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
+            const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
             html += `<div class="lb-entry">
                 <span class="lb-rank">${medal || rank}</span>
-                <span class="lb-name">${escapeHtml(d.name && d.name.trim() ? d.name : (t.anonymous || 'Аноним'))}</span>
+                <span class="lb-name">${escapeHtml(d.name && d.name.trim() ? d.name : (t.anonymous || 'Аноним'))}${devBadge}</span>
                 <span class="lb-score">${(parseInt(d.score, 10) || 0).toLocaleString()}</span>
             </div>`;
             rank++;
@@ -1553,6 +1556,13 @@ if (lbShowMore) {
 
 setInterval(() => {
     if (document.visibilityState === 'visible') loadLeaderboard();
+}, 3000);
+
+setInterval(() => {
+    const currentUid = authUid || (auth && auth.currentUser ? auth.currentUser.uid : null);
+    if (gameState === 'playing' && currentUid && score > 0) {
+        saveScoreToLeaderboard();
+    }
 }, 3000);
 
 // === FEEDBACK SYSTEM (BLOCKBLAST_FEEDBACK) ===
@@ -1639,9 +1649,11 @@ async function loadFeedback(silent) {
         snap.forEach(doc => {
             const d = doc.data();
             const time = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
+            const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
+            const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
             html += `<div class="fb-entry" data-id="${doc.id}">
                 <div class="fb-text">${escapeHtml(d.message)}</div>
-                <div class="fb-time">${escapeHtml(d.name || (t.anonymous || 'Аноним'))} · ${time}</div>
+                <div class="fb-time">${escapeHtml(d.name || (t.anonymous || 'Аноним'))}${devBadge} · ${time}</div>
             </div>`;
         });
         fbList.innerHTML = html;

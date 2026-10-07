@@ -442,6 +442,33 @@ body {
     box-shadow: var(--elevation-1);
 }
 
+.dev-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 1px 6px;
+    margin-left: 5px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #FF007F 0%, #7928CA 50%, #0070F3 100%);
+    background-size: 200% 200%;
+    animation: devBadgeShimmer 3s ease infinite;
+    color: #FFFFFF;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 1px 6px rgba(121, 40, 202, 0.45);
+    vertical-align: middle;
+    line-height: 1.35;
+    user-select: none;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+@keyframes devBadgeShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .game-container { position: relative; width: min(420px, 100vw - 32px); height: min(420px, 100vw - 32px, 78vh); z-index: 10; margin: 0 auto; touch-action: none; }
 .game-container.danmaku-container {
     height: min(580px, 72vh, calc((100vw - 32px) * 1.36));
