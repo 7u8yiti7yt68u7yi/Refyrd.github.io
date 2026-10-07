@@ -82,6 +82,11 @@
                         <button class="color-btn" data-c="red" style="background-color: #F44336;" title="Красная"></button>
                         <button class="color-btn" data-c="purple" style="background-color: #9C27B0;" title="Фиолетовая"></button>
                     </div>
+                    <div class="popover-divider"></div>
+                    <button class="theme-mode-btn" id="blockColorModeToggle" title="Цвет блоков">
+                        <span id="blockColorModeIcon" style="font-size: 14px;">🎨</span>
+                        <span id="uiBlockColorModeText">Разноцветные</span>
+                    </button>
                 </div>
             </div>
             <a href="../" class="icon-btn" id="homeBtn" title="На главную" aria-label="На главную">
@@ -98,9 +103,15 @@
                 <div class="menu-title" id="uiMainTitle" style="letter-spacing: 0.08em;">BLOCK BLAST</div>
                 <div class="high-score" id="menuHighScoreText">Лучший счет: 0</div>
                 
-                <input type="text" id="playerNameInput" class="name-input" placeholder="Твой никнейм" maxlength="12" autocomplete="off" style="margin: 6px 0 10px;">
+                <input type="text" id="playerNameInput" class="name-input" placeholder="Твой никнейм" maxlength="12" autocomplete="off" style="margin: 6px 0 8px;">
 
-                <div style="background: var(--md-sys-color-surface-container-high); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 12px 14px; font-size: 12px; line-height: 1.5; text-align: center; color: var(--md-sys-color-on-surface-variant); margin: 4px 0 14px; width: 100%;">
+                <div class="bb-theme-bar">
+                    <span id="uiBlockColorLabel" style="font-size: 11px; font-weight: 600; opacity: 0.85; margin-right: 2px;">Блоки:</span>
+                    <button class="bb-theme-pill-btn active" id="pillMulti">🎨 Разноцветные</button>
+                    <button class="bb-theme-pill-btn" id="pillTheme">💎 В цвет темы</button>
+                </div>
+
+                <div style="background: var(--md-sys-color-surface-container-high); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 12px 14px; font-size: 12px; line-height: 1.5; text-align: center; color: var(--md-sys-color-on-surface-variant); margin: 2px 0 14px; width: 100%;">
                     <div style="font-weight: 700; color: var(--md-sys-color-primary); margin-bottom: 4px;" id="uiControlsTitle">Как играть</div>
                     <div id="uiControlsTip" style="font-size: 11px; opacity: 0.9;">Перетаскивай или кликай фигуры для расстановки на поле 8x8. Заполняй полные линии!</div>
                 </div>

@@ -107,7 +107,7 @@ class SoundManager {
 }
 const sfx = new SoundManager();
 
-// === SHAPES LIBRARY ===
+// === SHAPES LIBRARY & COLOR MODES ===
 const BLOCK_COLORS = {
     cyan: '#00E5FF',
     gold: '#FFD700',
@@ -119,47 +119,197 @@ const BLOCK_COLORS = {
     amber: '#FF9100'
 };
 
+const COLOR_MAP_REVERSE = {
+    '#00E5FF': 'cyan',
+    '#FFD700': 'gold',
+    '#FF4081': 'rose',
+    '#00E676': 'emerald',
+    '#B388FF': 'purple',
+    '#FF5252': 'coral',
+    '#448AFF': 'blue',
+    '#FF9100': 'amber'
+};
+
+// Material Design 3 Tonal Palettes for theme-matching block colors
+const THEME_TONAL_MAP = {
+    green: {
+        dark: {
+            cyan: '#82d363',
+            gold: '#9cd67d',
+            rose: '#69b84a',
+            emerald: '#56a638',
+            purple: '#b7f397',
+            coral: '#438f28',
+            blue: '#78c659',
+            amber: '#adeb8e'
+        },
+        light: {
+            cyan: '#3e7524',
+            gold: '#4d8a2f',
+            rose: '#32631b',
+            emerald: '#295415',
+            purple: '#5c9e3b',
+            coral: '#1f430f',
+            blue: '#457e29',
+            amber: '#68ab45'
+        }
+    },
+    blue: {
+        dark: {
+            cyan: '#89bfff',
+            gold: '#9fc9ff',
+            rose: '#6ba8fa',
+            emerald: '#4b91f5',
+            purple: '#d1e4ff',
+            coral: '#347de8',
+            blue: '#7cb5fc',
+            amber: '#badaff'
+        },
+        light: {
+            cyan: '#006fb6',
+            gold: '#0083d6',
+            rose: '#005b97',
+            emerald: '#004c80',
+            purple: '#1b94e8',
+            coral: '#003e69',
+            blue: '#0065a6',
+            amber: '#36a3f2'
+        }
+    },
+    red: {
+        dark: {
+            cyan: '#f49b98',
+            gold: '#f2b8b5',
+            rose: '#e8827e',
+            emerald: '#d96763',
+            purple: '#f9dedc',
+            coral: '#c9514d',
+            blue: '#ee908c',
+            amber: '#f7ccc9'
+        },
+        light: {
+            cyan: '#c62b23',
+            gold: '#d9382f',
+            rose: '#a82019',
+            emerald: '#8f1610',
+            purple: '#e54a41',
+            coral: '#770e0a',
+            blue: '#b8251e',
+            amber: '#ee5d55'
+        }
+    },
+    purple: {
+        dark: {
+            cyan: '#c3a5fa',
+            gold: '#d0bcff',
+            rose: '#b28bf7',
+            emerald: '#9d6ef2',
+            purple: '#eaddff',
+            coral: '#8b55e8',
+            blue: '#ba98f8',
+            amber: '#decefc'
+        },
+        light: {
+            cyan: '#755bb3',
+            gold: '#8669c6',
+            rose: '#624a9a',
+            emerald: '#533b86',
+            purple: '#9477d6',
+            coral: '#442d72',
+            blue: '#6c53a8',
+            amber: '#a387e3'
+        }
+    },
+    neutral: {
+        dark: {
+            cyan: '#9bb4c4',
+            gold: '#b1c8d8',
+            rose: '#849fb0',
+            emerald: '#6f8b9d',
+            purple: '#cee4f4',
+            coral: '#5c7889',
+            blue: '#8fa9ba',
+            amber: '#c4d7e3'
+        },
+        light: {
+            cyan: '#526673',
+            gold: '#617885',
+            rose: '#445561',
+            emerald: '#384752',
+            purple: '#718997',
+            coral: '#2c3942',
+            blue: '#4b5e6b',
+            amber: '#819ba8'
+        }
+    }
+};
+
+let blockColorMode = getCookie('bbColorMode') || localStorage.getItem('bbColorMode') || 'multi'; // 'multi' or 'theme'
+
+function setBlockColorMode(mode) {
+    blockColorMode = (mode === 'theme') ? 'theme' : 'multi';
+    setCookie('bbColorMode', blockColorMode, 365);
+    localStorage.setItem('bbColorMode', blockColorMode);
+    updateBlockColorUI();
+}
+
+function resolveBlockColor(colorOrKey) {
+    if (!colorOrKey) return '#00E5FF';
+    const key = COLOR_MAP_REVERSE[colorOrKey] || colorOrKey;
+    if (blockColorMode === 'theme') {
+        const themeColor = document.documentElement.getAttribute('data-color') || 'neutral';
+        const themeMode = document.documentElement.getAttribute('data-theme') || 'dark';
+        const palette = THEME_TONAL_MAP[themeColor] && THEME_TONAL_MAP[themeColor][themeMode];
+        if (palette && palette[key]) {
+            return palette[key];
+        }
+        const primary = getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim();
+        return primary || '#4CAF50';
+    }
+    return BLOCK_COLORS[key] || colorOrKey;
+}
+
 const SHAPE_DEFINITIONS = [
     // 1x1 Dot
-    { matrix: [[1]], color: BLOCK_COLORS.gold, weight: 6 },
+    { matrix: [[1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 6 },
     // 2-block lines
-    { matrix: [[1, 1]], color: BLOCK_COLORS.cyan, weight: 8 },
-    { matrix: [[1], [1]], color: BLOCK_COLORS.cyan, weight: 8 },
+    { matrix: [[1, 1]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 8 },
+    { matrix: [[1], [1]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 8 },
     // 3-block lines
-    { matrix: [[1, 1, 1]], color: BLOCK_COLORS.emerald, weight: 8 },
-    { matrix: [[1], [1], [1]], color: BLOCK_COLORS.emerald, weight: 8 },
+    { matrix: [[1, 1, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 8 },
+    { matrix: [[1], [1], [1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 8 },
     // 4-block lines
-    { matrix: [[1, 1, 1, 1]], color: BLOCK_COLORS.blue, weight: 6 },
-    { matrix: [[1], [1], [1], [1]], color: BLOCK_COLORS.blue, weight: 6 },
+    { matrix: [[1, 1, 1, 1]], color: BLOCK_COLORS.blue, colorKey: 'blue', weight: 6 },
+    { matrix: [[1], [1], [1], [1]], color: BLOCK_COLORS.blue, colorKey: 'blue', weight: 6 },
     // 5-block lines
-    { matrix: [[1, 1, 1, 1, 1]], color: BLOCK_COLORS.purple, weight: 4 },
-    { matrix: [[1], [1], [1], [1], [1]], color: BLOCK_COLORS.purple, weight: 4 },
+    { matrix: [[1, 1, 1, 1, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 4 },
+    { matrix: [[1], [1], [1], [1], [1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 4 },
     // 2x2 Square
-    { matrix: [[1, 1], [1, 1]], color: BLOCK_COLORS.amber, weight: 8 },
+    { matrix: [[1, 1], [1, 1]], color: BLOCK_COLORS.amber, colorKey: 'amber', weight: 8 },
     // 3x3 Square
-    { matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: BLOCK_COLORS.coral, weight: 3 },
+    { matrix: [[1, 1, 1], [1, 1, 1], [1, 1, 1]], color: BLOCK_COLORS.coral, colorKey: 'coral', weight: 3 },
     // Small Corner L (2x2)
-    { matrix: [[1, 0], [1, 1]], color: BLOCK_COLORS.rose, weight: 6 },
-    { matrix: [[0, 1], [1, 1]], color: BLOCK_COLORS.rose, weight: 6 },
-    { matrix: [[1, 1], [1, 0]], color: BLOCK_COLORS.rose, weight: 6 },
-    { matrix: [[1, 1], [0, 1]], color: BLOCK_COLORS.rose, weight: 6 },
+    { matrix: [[1, 0], [1, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
+    { matrix: [[0, 1], [1, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
+    { matrix: [[1, 1], [1, 0]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
+    { matrix: [[1, 1], [0, 1]], color: BLOCK_COLORS.rose, colorKey: 'rose', weight: 6 },
     // Big L (3x3)
-    { matrix: [[1, 0, 0], [1, 0, 0], [1, 1, 1]], color: BLOCK_COLORS.gold, weight: 4 },
-    { matrix: [[0, 0, 1], [0, 0, 1], [1, 1, 1]], color: BLOCK_COLORS.gold, weight: 4 },
-    { matrix: [[1, 1, 1], [1, 0, 0], [1, 0, 0]], color: BLOCK_COLORS.gold, weight: 4 },
-    { matrix: [[1, 1, 1], [0, 0, 1], [0, 0, 1]], color: BLOCK_COLORS.gold, weight: 4 },
+    { matrix: [[1, 0, 0], [1, 0, 0], [1, 1, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
+    { matrix: [[0, 0, 1], [0, 0, 1], [1, 1, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
+    { matrix: [[1, 1, 1], [1, 0, 0], [1, 0, 0]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
+    { matrix: [[1, 1, 1], [0, 0, 1], [0, 0, 1]], color: BLOCK_COLORS.gold, colorKey: 'gold', weight: 4 },
     // T-shapes
-    { matrix: [[1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.purple, weight: 5 },
-    { matrix: [[0, 1, 0], [1, 1, 1]], color: BLOCK_COLORS.purple, weight: 5 },
-    { matrix: [[1, 0], [1, 1], [1, 0]], color: BLOCK_COLORS.purple, weight: 5 },
-    { matrix: [[0, 1], [1, 1], [0, 1]], color: BLOCK_COLORS.purple, weight: 5 },
+    { matrix: [[1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
+    { matrix: [[0, 1, 0], [1, 1, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
+    { matrix: [[1, 0], [1, 1], [1, 0]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
+    { matrix: [[0, 1], [1, 1], [0, 1]], color: BLOCK_COLORS.purple, colorKey: 'purple', weight: 5 },
     // Z / S shapes
-    { matrix: [[1, 1, 0], [0, 1, 1]], color: BLOCK_COLORS.emerald, weight: 4 },
-    { matrix: [[0, 1, 1], [1, 1, 0]], color: BLOCK_COLORS.emerald, weight: 4 },
-    { matrix: [[1, 0], [1, 1], [0, 1]], color: BLOCK_COLORS.emerald, weight: 4 },
-    { matrix: [[0, 1], [1, 1], [1, 0]], color: BLOCK_COLORS.emerald, weight: 4 },
+    { matrix: [[1, 1, 0], [0, 1, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
+    { matrix: [[0, 1, 1], [1, 1, 0]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
+    { matrix: [[1, 0], [1, 1], [0, 1]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
+    { matrix: [[0, 1], [1, 1], [1, 0]], color: BLOCK_COLORS.emerald, colorKey: 'emerald', weight: 4 },
     // Plus / Cross
-    { matrix: [[0, 1, 0], [1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.cyan, weight: 3 }
+    { matrix: [[0, 1, 0], [1, 1, 1], [0, 1, 0]], color: BLOCK_COLORS.cyan, colorKey: 'cyan', weight: 3 }
 ];
 
 function getRandomShape() {
@@ -170,13 +320,20 @@ function getRandomShape() {
             return {
                 matrix: def.matrix.map(row => [...row]),
                 color: def.color,
+                colorKey: def.colorKey,
                 rows: def.matrix.length,
                 cols: def.matrix[0].length
             };
         }
         r -= def.weight;
     }
-    return SHAPE_DEFINITIONS[0];
+    return {
+        matrix: SHAPE_DEFINITIONS[0].matrix.map(row => [...row]),
+        color: SHAPE_DEFINITIONS[0].color,
+        colorKey: SHAPE_DEFINITIONS[0].colorKey,
+        rows: SHAPE_DEFINITIONS[0].matrix.length,
+        cols: SHAPE_DEFINITIONS[0].matrix[0].length
+    };
 }
 
 // === BOARD & GAMEPLAY CONSTANTS ===
@@ -299,7 +456,7 @@ function placeShape(slotIndex, row, col) {
     for (let r = 0; r < piece.rows; r++) {
         for (let c = 0; c < piece.cols; c++) {
             if (piece.matrix[r][c] === 1) {
-                grid[row + r][col + c] = piece.color;
+                grid[row + r][col + c] = piece.colorKey || COLOR_MAP_REVERSE[piece.color] || 'cyan';
                 placedCount++;
             }
         }
@@ -351,7 +508,7 @@ function placeShape(slotIndex, row, col) {
             const [r, c] = key.split(',').map(Number);
             const cx = BOARD_X + c * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2;
             const cy = BOARD_Y + r * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2;
-            createBlockExplosion(cx, cy, grid[r][c] || piece.color);
+            createBlockExplosion(cx, cy, resolveBlockColor(grid[r][c] || piece.colorKey || piece.color));
             grid[r][c] = null;
         });
 
@@ -623,7 +780,7 @@ function render() {
             const filledColor = grid[r][c];
 
             if (filledColor) {
-                renderBlock(x, y, CELL_SIZE, filledColor);
+                renderBlock(x, y, CELL_SIZE, resolveBlockColor(filledColor));
             } else {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
                 drawRoundedRect(x, y, CELL_SIZE, CELL_SIZE, 8);
@@ -651,7 +808,7 @@ function render() {
                     if (previewPiece.matrix[pr][pc] === 1) {
                         const gx = BOARD_X + (col + pc) * (CELL_SIZE + CELL_GAP);
                         const gy = BOARD_Y + (row + pr) * (CELL_SIZE + CELL_GAP);
-                        renderBlock(gx, gy, CELL_SIZE, previewPiece.color, 0.45);
+                        renderBlock(gx, gy, CELL_SIZE, resolveBlockColor(previewPiece.colorKey || previewPiece.color), 0.45);
                     }
                 }
             }
@@ -709,13 +866,13 @@ function render() {
             ctx.restore();
         }
 
-        renderPieceMatrix(slot.piece.matrix, slot.piece.color, slot.cx, slot.cy, 22 * slot.scale);
+        renderPieceMatrix(slot.piece.matrix, resolveBlockColor(slot.piece.colorKey || slot.piece.color), slot.cx, slot.cy, 22 * slot.scale);
     }
 
     // 5. Dragged Piece (rendered at full cell size at drag position)
     if (draggingSlotIndex !== -1 && DOCK_SLOTS[draggingSlotIndex].piece) {
         const p = DOCK_SLOTS[draggingSlotIndex].piece;
-        renderPieceMatrix(p.matrix, p.color, dragX, dragY, CELL_SIZE, 0.95);
+        renderPieceMatrix(p.matrix, resolveBlockColor(p.colorKey || p.color), dragX, dragY, CELL_SIZE, 0.95);
     }
 
     // 6. Particles
@@ -1366,6 +1523,11 @@ function applyLanguage() {
     const toHubBtns = document.querySelectorAll('.to-hub-btn, #uiStartToHubBtn, #uiGameOverToHubBtn');
     toHubBtns.forEach(el => el.innerText = t.allGamesBtn || (currentLang === 'ru' ? 'Все игры' : 'All games'));
 
+    const curTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const modeText = document.getElementById('uiThemeModeText');
+    if (modeText) modeText.textContent = curTheme === 'dark' ? (t.themeModeDark || 'Темная') : (t.themeModeLight || 'Светлая');
+
+    updateBlockColorUI();
     updateScoreDisplay();
 }
 
@@ -1391,6 +1553,10 @@ if (themeModeToggle) {
         document.documentElement.setAttribute('data-theme', curTheme);
         document.body.setAttribute('data-theme', curTheme);
         setCookie('snakeTheme', curTheme);
+        const modeText = document.getElementById('uiThemeModeText');
+        const t = (typeof i18n !== 'undefined' && i18n[currentLang]) ? i18n[currentLang] : {};
+        if (modeText) modeText.textContent = curTheme === 'dark' ? (t.themeModeDark || 'Темная') : (t.themeModeLight || 'Светлая');
+        updateBlockColorUI();
     });
 }
 
@@ -1400,11 +1566,68 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         document.documentElement.setAttribute('data-color', col);
         document.body.setAttribute('data-color', col);
         setCookie('snakeColor', col);
+        updateBlockColorUI();
     });
 });
+
+// Block color mode UI & listeners
+function updateBlockColorUI() {
+    const t = (typeof i18n !== 'undefined' && i18n[currentLang]) ? i18n[currentLang] : {};
+    const isTheme = blockColorMode === 'theme';
+
+    const toggleBtn = document.getElementById('blockColorModeToggle');
+    const icon = document.getElementById('blockColorModeIcon');
+    const text = document.getElementById('uiBlockColorModeText');
+    if (toggleBtn) {
+        toggleBtn.title = t.bbBlockColorToggleTip || 'Оформление блоков: Разноцветные / В цвет темы';
+    }
+    if (icon) {
+        icon.textContent = isTheme ? '💎' : '🎨';
+    }
+    if (text) {
+        text.textContent = isTheme ? (t.bbColorTheme || 'В цвет темы') : (t.bbColorMulti || 'Разноцветные');
+    }
+
+    const label = document.getElementById('uiBlockColorLabel');
+    if (label) {
+        label.textContent = t.bbBlockColorLabel || 'Цвет блоков:';
+    }
+    const pillMulti = document.getElementById('pillMulti');
+    const pillTheme = document.getElementById('pillTheme');
+    if (pillMulti) {
+        pillMulti.classList.toggle('active', !isTheme);
+        pillMulti.textContent = '🎨 ' + (t.bbColorMulti || 'Разноцветные');
+    }
+    if (pillTheme) {
+        pillTheme.classList.toggle('active', isTheme);
+        pillTheme.textContent = '💎 ' + (t.bbColorTheme || 'В цвет темы');
+    }
+}
+
+const blockColorToggle = document.getElementById('blockColorModeToggle');
+if (blockColorToggle) {
+    blockColorToggle.addEventListener('click', () => {
+        setBlockColorMode(blockColorMode === 'multi' ? 'theme' : 'multi');
+    });
+}
+
+const pillMulti = document.getElementById('pillMulti');
+if (pillMulti) {
+    pillMulti.addEventListener('click', () => {
+        setBlockColorMode('multi');
+    });
+}
+
+const pillTheme = document.getElementById('pillTheme');
+if (pillTheme) {
+    pillTheme.addEventListener('click', () => {
+        setBlockColorMode('theme');
+    });
+}
 
 // Start game
 resizeCanvas();
 spawnNewDockPieces();
 applyLanguage();
+updateBlockColorUI();
 requestAnimationFrame(render);
