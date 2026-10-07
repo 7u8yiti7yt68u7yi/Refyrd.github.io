@@ -1241,6 +1241,8 @@ body {
         transform: none;
         width: calc(100vw - 32px);
         max-width: none;
+        max-height: none;
+        height: auto;
         flex-direction: column;
         padding: 14px 16px;
         margin-top: 12px;

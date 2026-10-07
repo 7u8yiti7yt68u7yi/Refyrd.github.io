@@ -365,6 +365,11 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+try {
+    db.settings({ experimentalAutoDetectLongPolling: true });
+} catch (e) {
+    console.warn('Firestore settings error:', e);
+}
 const auth = firebase.auth();
 const LEADERBOARD_COLLECTION = 'leaderboard';
 
@@ -915,9 +920,6 @@ auth.onAuthStateChanged(user => {
         if (user.email) setCookie('authEmail', user.email, 365);
         if (user.displayName) setCookie('snakeNick', user.displayName, 365);
         setCookie('isLoggedIn', '1', 365);
-        loadLeaderboard();
-        syncBestScoreFromServer();
-        loadFeedback();
     } else if (user && user.isAnonymous) {
         authUser = user;
         authUid = user.uid;
@@ -925,16 +927,19 @@ auth.onAuthStateChanged(user => {
         if (!getCookie('authUid')) {
             setCookie('authUid', user.uid, 365);
         }
-        loadLeaderboard();
-        syncBestScoreFromServer();
-        loadFeedback();
     } else {
         authUser = null;
         authUid = null;
         deleteCookie('isLoggedIn');
+        if (!skipAnonSignIn) {
+            auth.signInAnonymously().catch(e => console.warn('Anon sign-in error:', e));
+        }
     }
     updateAuthUI();
     updateNicknameInputVisibility();
+    syncBestScoreFromServer();
+    loadLeaderboard();
+    loadFeedback();
 });
 
 const leaderboardList = document.getElementById('leaderboardList');
@@ -988,10 +993,14 @@ let _lbLangAtStart = '';
 async function loadLeaderboard() {
     _lbLangAtStart = currentLang;
     try {
-        const snapshot = await db.collection(LEADERBOARD_COLLECTION)
+        const queryPromise = db.collection(LEADERBOARD_COLLECTION)
             .orderBy('score', 'desc')
             .limit(lbLimit)
             .get();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Network timeout')), 10000)
+        );
+        const snapshot = await Promise.race([queryPromise, timeoutPromise]);
         if (currentLang !== _lbLangAtStart) return;
         setLbStatus('online', i18n[currentLang].online);
         if (snapshot.empty) {
@@ -1013,15 +1022,11 @@ async function loadLeaderboard() {
         if (leaderboardList.innerHTML !== html) {
             leaderboardList.innerHTML = html;
         }
-        if (!window._lbHeightFixed) {
+        if (!window._lbHeightFixed && window.innerWidth > 640) {
             const lb = document.getElementById('leaderboard');
-            if (lb) {
+            if (lb && window.getComputedStyle(lb).position === 'fixed') {
                 window._lbHeightFixed = true;
-                if (window.getComputedStyle(lb).position === 'fixed') {
-                    lb.style.height = lb.offsetHeight + 'px';
-                } else if (lb.offsetHeight > 0) {
-                    lb.style.height = Math.min(lb.offsetHeight, window.innerHeight * 0.6) + 'px';
-                }
+                lb.style.height = lb.offsetHeight + 'px';
             }
         }
     } catch (e) {
@@ -1053,6 +1058,8 @@ lbShowMore.addEventListener('click', () => {
     document.getElementById('leaderboard').classList.toggle('lb-show-all', lbShowAll);
     loadLeaderboard();
 });
+
+loadLeaderboard();
 
 setInterval(() => {
     if (document.visibilityState === 'visible') loadLeaderboard();
@@ -1336,9 +1343,9 @@ async function loadFeedback(silent) {
 			try { localStorage.setItem('fbVotes', JSON.stringify(fbVotes)); } catch (_) {}
 		}
 		// Lock feedback panel height like leaderboard
-		if (!window._fbHeightFixed) {
+		if (!window._fbHeightFixed && window.innerWidth > 640) {
 			const fp = document.getElementById('feedbackPanel');
-			if (fp && fp.offsetHeight > 0) {
+			if (fp && fp.offsetHeight > 0 && window.getComputedStyle(fp).position === 'fixed') {
 				window._fbHeightFixed = true;
 				fp.style.height = Math.min(fp.offsetHeight, window.innerHeight * 0.75) + 'px';
 			}
@@ -1348,6 +1355,7 @@ async function loadFeedback(silent) {
 		fbList.innerHTML = `<div class="lb-empty">${i18n[currentLang].fbLoadFail}</div>`;
 	}
 }
+loadFeedback();
 
 fbList.addEventListener('click', (e) => {
 	const fbDelBtn = e.target.closest('.fb-del-btn');

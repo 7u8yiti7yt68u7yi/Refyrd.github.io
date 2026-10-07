@@ -1713,6 +1713,13 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = (typeof firebase !== 'undefined') ? firebase.firestore() : null;
+if (db) {
+    try {
+        db.settings({ experimentalAutoDetectLongPolling: true });
+    } catch (e) {
+        console.warn('Firestore settings error:', e);
+    }
+}
 const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 const LEADERBOARD_COLLECTION = 'danmaku_leaderboard';
 const Fb_COLLECTION = 'danmaku_feedback';
@@ -2203,11 +2210,9 @@ if (auth) {
             authUser = null;
             authUid = null;
             if (!skipAnonSignIn) {
-                try {
-                    await auth.signInAnonymously();
-                } catch (e) {
+                auth.signInAnonymously().catch(e => {
                     console.warn('Anonymous sign-in error:', e);
-                }
+                });
             }
         }
         updateAuthUI();
@@ -2317,10 +2322,14 @@ async function loadLeaderboard() {
     _lbLangAtStart = currentLang;
     const t = i18n[currentLang] || i18n.ru;
     try {
-        const snapshot = await db.collection(LEADERBOARD_COLLECTION)
+        const queryPromise = db.collection(LEADERBOARD_COLLECTION)
             .orderBy('score', 'desc')
             .limit(lbLimit)
             .get();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Network timeout')), 10000)
+        );
+        const snapshot = await Promise.race([queryPromise, timeoutPromise]);
         if (currentLang !== _lbLangAtStart) return;
         setLbStatus('online', t.online);
         if (snapshot.empty) {
@@ -2371,6 +2380,7 @@ if (lbShowMore) {
         loadLeaderboard();
     });
 }
+loadLeaderboard();
 
 setInterval(() => {
     if (document.visibilityState === 'visible') loadLeaderboard();
@@ -2573,7 +2583,11 @@ async function loadFeedback(silent) {
     const t = i18n[currentLang] || i18n.ru;
     if (!silent) fbList.innerHTML = `<div class="lb-loading">${t.lbLoading}</div>`;
     try {
-        const snap = await db.collection(Fb_COLLECTION).orderBy('time', 'desc').limit(50).get();
+        const queryPromise = db.collection(Fb_COLLECTION).orderBy('time', 'desc').limit(50).get();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Network timeout')), 10000)
+        );
+        const snap = await Promise.race([queryPromise, timeoutPromise]);
         if (currentLang !== _fbLangAtStart) return;
         if (snap.empty) {
             fbList.innerHTML = `<div class="lb-empty">${t.fbNoFeedback}</div>`;
@@ -2648,6 +2662,7 @@ async function loadFeedback(silent) {
         fbList.innerHTML = `<div class="lb-empty">${t.fbLoadFail}</div>`;
     }
 }
+loadFeedback();
 
 if (fbList) {
     fbList.addEventListener('click', (e) => {

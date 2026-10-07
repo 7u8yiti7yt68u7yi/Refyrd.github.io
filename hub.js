@@ -344,6 +344,11 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+try {
+    db.settings({ experimentalAutoDetectLongPolling: true });
+} catch (e) {
+    console.warn('Firestore settings error:', e);
+}
 const auth = firebase.auth();
 
 let authUid = null;
