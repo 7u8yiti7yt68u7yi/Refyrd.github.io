@@ -1,0 +1,5 @@
+/* === SNAKE SPECIFIC STYLES === */
+.game-container.snake-container {
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    box-shadow: var(--elevation-3);
+}

@@ -1,0 +1,46 @@
+/* === BLOCK BLAST SPECIFIC STYLES === */
+.game-container.blockblast-container {
+    border-radius: var(--md-sys-shape-corner-extra-large);
+    box-shadow: var(--elevation-3);
+    max-height: 520px;
+}
+
+.bb-theme-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin: 4px 0 10px;
+}
+
+.bb-theme-pill-btn {
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: var(--md-sys-shape-corner-full);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: all var(--md-sys-motion-duration-short) ease;
+}
+
+.bb-theme-pill-btn:hover {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+}
+
+.bb-theme-pill-btn.active {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-color: var(--md-sys-color-primary);
+    box-shadow: var(--elevation-1);
+}

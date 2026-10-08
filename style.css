@@ -1,3 +1,8 @@
+@import url('hub.css');
+@import url('danmaku.css');
+@import url('blockblast.css');
+@import url('snake.css');
+
 /* === GOOGLE SANS @FONT-FACE (CYRILLIC & LATIN) === */
 /* cyrillic 400 */
 @font-face {
@@ -964,24 +969,6 @@ body::after {
     color: var(--md-sys-color-on-primary-container);
 }
 
-@media (min-width: 1120px) {
-    .hub-feedback-section {
-        position: fixed;
-        right: clamp(16px, 2.5vw, 36px);
-        top: 50%;
-        transform: translateY(-50%);
-        width: 320px;
-        max-height: min(540px, 80vh);
-        margin-top: 0;
-        overflow: hidden;
-    }
-    .hub-feedback-section .feedback-list {
-        flex: 1;
-        overflow-y: auto;
-        min-height: 0;
-        scrollbar-width: thin;
-    }
-}
 
 /* === COOKIE BANNER (M3 EXPRESSIVE) === */
 .cookie-banner {

@@ -1188,7 +1188,7 @@ if (db) {
 }
 const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 const LEADERBOARD_COLLECTION = 'blockblast_leaderboard';
-const Fb_COLLECTION = 'blockblast_feedback';
+const Fb_COLLECTION = 'feedback';
 const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
 
 let authUid = null;

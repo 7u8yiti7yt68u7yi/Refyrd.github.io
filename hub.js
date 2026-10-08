@@ -891,12 +891,12 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-// === HUB FEEDBACK SYSTEM (FEEDBACK_HUB) ===
-const FEEDBACK_HUB_COLLECTION = 'feedback_hub';
+// === HUB FEEDBACK SYSTEM ===
+const FEEDBACK_HUB_COLLECTION = 'feedback';
 const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
 let fbHubCacheDocs = [];
 let fbHubShowAll = false;
-let fbHubActiveCollection = FEEDBACK_HUB_COLLECTION;
+let fbHubActiveCollection = 'feedback';
 
 const fbList = document.getElementById('fbList');
 const fbOverlay = document.getElementById('fbOverlay');

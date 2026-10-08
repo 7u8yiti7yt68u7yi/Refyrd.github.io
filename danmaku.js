@@ -1722,7 +1722,7 @@ if (db) {
 }
 const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 const LEADERBOARD_COLLECTION = 'danmaku_leaderboard';
-const Fb_COLLECTION = 'danmaku_feedback';
+const Fb_COLLECTION = 'feedback';
 const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
 
 let authUid = null;
@@ -2871,3 +2871,4 @@ applyTheme();
 applyColor(activeColor);
 applyLanguage();
 initCookieBanner();
+loadFeedback();
