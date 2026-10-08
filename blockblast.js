@@ -1635,18 +1635,54 @@ async function loadFeedback(silent) {
     const t = (typeof i18n !== 'undefined' && i18n[currentLang]) ? i18n[currentLang] : {};
     if (!silent) fbList.innerHTML = `<div class="lb-loading">${t.lbLoading || 'Загрузка...'}</div>`;
     try {
-        const queryPromise = db.collection(Fb_COLLECTION).orderBy('time', 'desc').limit(50).get();
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Network timeout')), 10000)
-        );
-        const snap = await Promise.race([queryPromise, timeoutPromise]);
+        if (auth && !auth.currentUser) {
+            try {
+                await auth.signInAnonymously();
+            } catch (anonErr) {
+                console.warn('Anonymous sign-in before loadFeedback failed:', anonErr);
+            }
+        }
+        let snap;
+        let usedCollection = Fb_COLLECTION;
+        try {
+            snap = await db.collection(usedCollection).orderBy('time', 'desc').limit(50).get();
+        } catch (e1) {
+            console.warn('Feedback query with orderBy failed:', e1);
+            try {
+                snap = await db.collection(usedCollection).limit(50).get();
+            } catch (e2) {
+                console.warn('Feedback query fallback failed:', e2);
+                usedCollection = 'feedback';
+                try {
+                    snap = await db.collection(usedCollection).orderBy('time', 'desc').limit(50).get();
+                } catch (e3) {
+                    snap = await db.collection(usedCollection).limit(50).get();
+                }
+            }
+        }
         if (currentLang !== _fbLangAtStart) return;
         if (snap.empty) {
             fbList.innerHTML = `<div class="lb-empty">${t.fbNoFeedback || 'Пока нет отзывов'}</div>`;
             return;
         }
+
+        const docs = [];
+        snap.forEach(doc => docs.push(doc));
+        docs.sort((a, b) => {
+            const da = a.data(), dbData = b.data();
+            const likesA = da.likes ?? da.likeCount ?? 0;
+            const likesB = dbData.likes ?? dbData.likeCount ?? 0;
+            if (likesB !== likesA) return likesB - likesA;
+            const netA = likesA - (da.dislikes ?? da.dislikeCount ?? 0);
+            const netB = likesB - (dbData.dislikes ?? dbData.dislikeCount ?? 0);
+            if (netB !== netA) return netB - netA;
+            const timeA = da.time?.seconds || 0;
+            const timeB = dbData.time?.seconds || 0;
+            return timeB - timeA;
+        });
+
         let html = '';
-        snap.forEach(doc => {
+        docs.forEach(doc => {
             const d = doc.data();
             const time = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
             const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
@@ -1658,6 +1694,7 @@ async function loadFeedback(silent) {
         });
         fbList.innerHTML = html;
     } catch (e) {
+        console.error('loadFeedback error in blockblast:', e);
         if (currentLang !== _fbLangAtStart) return;
         fbList.innerHTML = `<div class="lb-empty">${t.fbLoadFail || 'Не удалось загрузить отзывы'}</div>`;
     }

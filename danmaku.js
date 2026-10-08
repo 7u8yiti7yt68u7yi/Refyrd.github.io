@@ -2591,22 +2591,60 @@ async function loadFeedback(silent) {
     const t = i18n[currentLang] || i18n.ru;
     if (!silent) fbList.innerHTML = `<div class="lb-loading">${t.lbLoading}</div>`;
     try {
-        const snap = await db.collection(Fb_COLLECTION).orderBy('time', 'desc').limit(50).get();
+        if (auth && !auth.currentUser) {
+            try {
+                await auth.signInAnonymously();
+            } catch (anonErr) {
+                console.warn('Anonymous sign-in before loadFeedback failed:', anonErr);
+            }
+        }
+        let snap;
+        let usedCollection = Fb_COLLECTION;
+        try {
+            snap = await db.collection(usedCollection).orderBy('time', 'desc').limit(50).get();
+        } catch (e1) {
+            console.warn('Feedback query with orderBy failed:', e1);
+            try {
+                snap = await db.collection(usedCollection).limit(50).get();
+            } catch (e2) {
+                console.warn('Feedback query fallback failed:', e2);
+                usedCollection = 'feedback';
+                try {
+                    snap = await db.collection(usedCollection).orderBy('time', 'desc').limit(50).get();
+                } catch (e3) {
+                    snap = await db.collection(usedCollection).limit(50).get();
+                }
+            }
+        }
         if (currentLang !== _fbLangAtStart) return;
         if (snap.empty) {
             fbList.innerHTML = `<div class="lb-empty">${t.fbNoFeedback}</div>`;
             return;
         }
-        const feedbackIds = [];
-        snap.forEach(doc => feedbackIds.push(doc.id));
+        const docs = [];
+        snap.forEach(doc => docs.push(doc));
+        docs.sort((a, b) => {
+            const da = a.data(), dbData = b.data();
+            const likesA = da.likes ?? da.likeCount ?? 0;
+            const likesB = dbData.likes ?? dbData.likeCount ?? 0;
+            if (likesB !== likesA) return likesB - likesA;
+            const netA = likesA - (da.dislikes ?? da.dislikeCount ?? 0);
+            const netB = likesB - (dbData.dislikes ?? dbData.dislikeCount ?? 0);
+            if (netB !== netA) return netB - netA;
+            const timeA = da.time?.seconds || 0;
+            const timeB = dbData.time?.seconds || 0;
+            return timeB - timeA;
+        });
+
+        const feedbackIds = docs.map(doc => doc.id);
         const userVotes = {};
         try {
             const cached = JSON.parse(localStorage.getItem('danmakuFbVotes') || '{}');
             Object.keys(cached).forEach(id => { if (feedbackIds.includes(id)) userVotes[id] = cached[id]; });
         } catch (_) {}
-        const myUid = authUid || getCookie('authUid') || '';
+        const myUid = authUid || getCookie('authUid') || (auth && auth.currentUser ? auth.currentUser.uid : '');
         let html = '';
-        snap.forEach(doc => {
+        docs.forEach(doc => {
             const d = doc.data();
             const id = doc.id;
             const time = d.time ? new Date(d.time.seconds * 1000).toLocaleDateString() : '';
@@ -2616,9 +2654,9 @@ async function loadFeedback(silent) {
             const msg = escapeHtml(d.message);
             const long = msg.length > 100;
             const isOwner = Boolean(myUid && d.uid && d.uid === myUid);
-                const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
-                const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
-                html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
+            const isDev = doc.id === DEV_UID || d.uid === DEV_UID;
+            const devBadge = isDev ? '<span class="dev-badge">DEV</span>' : '';
+            html += `<div class="fb-entry" data-id="${id}" data-uid="${escapeHtml(d.uid || '')}">
                 ${isOwner ? `<button class="fb-del-btn" title="${t.deleteBtn || 'Удалить'}">✕</button>` : ''}
                 <div class="fb-text${long ? ' collapsed' : ''}">${msg}</div>
                 <div class="fb-expand-row">
@@ -2643,9 +2681,9 @@ async function loadFeedback(silent) {
             </div>`;
         });
         fbList.innerHTML = html;
-        if (authUid) {
+        if (myUid) {
             const voteResults = await Promise.allSettled(
-                feedbackIds.map(id => db.collection(Fb_COLLECTION).doc(id).collection('votes').doc(authUid).get())
+                feedbackIds.map(id => db.collection(usedCollection).doc(id).collection('votes').doc(myUid).get())
             );
             const fbVotes = {};
             voteResults.forEach((r, i) => {
@@ -2664,6 +2702,7 @@ async function loadFeedback(silent) {
             try { localStorage.setItem('danmakuFbVotes', JSON.stringify(fbVotes)); } catch (_) {}
         }
     } catch (e) {
+        console.error('loadFeedback error in danmaku:', e);
         if (currentLang !== _fbLangAtStart) return;
         fbList.innerHTML = `<div class="lb-empty">${t.fbLoadFail}</div>`;
     }
