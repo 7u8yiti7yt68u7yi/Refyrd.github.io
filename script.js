@@ -371,6 +371,7 @@ try {
 }
 const auth = firebase.auth();
 const LEADERBOARD_COLLECTION = 'leaderboard';
+const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
 
 let authUid = null;
 let authUser = null;
@@ -1012,7 +1013,6 @@ async function loadLeaderboard() {
         }
         let html = '';
         let rank = 1;
-        const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
         snapshot.forEach(doc => {
             const d = doc.data();
             const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';

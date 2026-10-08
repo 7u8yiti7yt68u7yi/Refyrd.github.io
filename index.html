@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Google+Sans+Flex:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
     <script>
         (function() {
             var match = document.cookie.match(/(^| )snakeTheme=([^;]+)/);
@@ -131,20 +131,20 @@
                 </div>
             </div>
         </div>
-
-        <section class="hub-feedback-section">
-            <div class="hub-feedback-header">
-                <span class="hub-feedback-title" id="uiFbHubTitle">ОТЗЫВЫ СООБЩЕСТВА</span>
-                <button class="btn-primary" id="fbWriteBtn" style="height: 36px; padding: 0 16px; font-size: 13px; width: auto;">Написать отзыв</button>
-            </div>
-            <div class="feedback-list" id="fbList">
-                <div class="lb-loading">Загрузка отзывов...</div>
-            </div>
-            <div class="hub-fb-show-more-wrap" id="hubFbShowMoreWrap" style="display: none;">
-                <button class="hub-fb-show-more-btn" id="hubFbShowMoreBtn">Показать ещё</button>
-            </div>
-        </section>
     </main>
+
+    <section class="hub-feedback-section" id="hubFeedbackSection">
+        <div class="hub-feedback-header">
+            <span class="hub-feedback-title" id="uiFbHubTitle">ОТЗЫВЫ СООБЩЕСТВА</span>
+            <button class="btn-primary" id="fbWriteBtn" style="height: 36px; padding: 0 16px; font-size: 13px; width: auto;">Написать отзыв</button>
+        </div>
+        <div class="feedback-list" id="fbList">
+            <div class="lb-loading">Загрузка отзывов...</div>
+        </div>
+        <div class="hub-fb-show-more-wrap" id="hubFbShowMoreWrap" style="display: none;">
+            <button class="hub-fb-show-more-btn" id="hubFbShowMoreBtn">Показать ещё</button>
+        </div>
+    </section>
 
     <div class="auth-overlay" id="fbOverlay">
         <div class="auth-modal">
@@ -274,6 +274,6 @@
 
     <script src="profanity.js"></script>
     <script src="i18n.js"></script>
-    <script src="hub.js?v=2"></script>
+    <script src="hub.js?v=3"></script>
 </body>
 </html>

@@ -1189,6 +1189,7 @@ if (db) {
 const auth = (typeof firebase !== 'undefined') ? firebase.auth() : null;
 const LEADERBOARD_COLLECTION = 'blockblast_leaderboard';
 const Fb_COLLECTION = 'blockblast_feedback';
+const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
 
 let authUid = null;
 let authUser = null;
@@ -1507,7 +1508,6 @@ async function loadLeaderboard() {
         }
         let html = '';
         let rank = 1;
-        const DEV_UID = 'YVCdKKKiLXUzSl5ZRCbAep6aYiv2';
         snapshot.forEach(doc => {
             const d = doc.data();
             const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';

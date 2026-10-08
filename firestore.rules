@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === LEADERBOARDS ===
+    // Classic Snake
+    match /leaderboard/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Danmaku Hell
+    match /danmaku_leaderboard/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Block Blast
+    match /blockblast_leaderboard/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // === USER PROFILES ===
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // === FEEDBACK COLLECTIONS & SUBCOLLECTIONS ===
+    // Matches: feedback, feedback_hub, danmaku_feedback, blockblast_feedback
+    match /{feedbackCollection}/{id} {
+      allow read: if feedbackCollection in ['feedback', 'feedback_hub', 'danmaku_feedback', 'blockblast_feedback'];
+      allow create, update, delete: if feedbackCollection in ['feedback', 'feedback_hub', 'danmaku_feedback', 'blockblast_feedback']
+        && request.auth != null;
+
+      // Votes subcollection
+      match /votes/{voteKey} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == voteKey;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create, update, delete: if request.auth != null;
+      }
+    }
+
+    // Deny anything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
